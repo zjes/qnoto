@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+
+set_and_check(ORI_CMAKE_DIR "@CMAKE_SOURCE_DIR@/cmake/@NAME@")
+include("@CMAKE_BINARY_DIR@/common-targets.cmake")
+
+include(${ORI_CMAKE_DIR}/qnoto.cmake)
+
