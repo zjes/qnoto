@@ -9,7 +9,7 @@ class IncludeRules: public Rule
 {
 public:
     IncludeRules(bool includeAttrib);
-    MatchResult match(const QString& text, int offset, const QStringList&) override;
+    int match(const QString& text, int offset) override;
 private:
     bool m_includeAttrib;
 };

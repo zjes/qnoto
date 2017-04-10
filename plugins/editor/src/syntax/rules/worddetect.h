@@ -9,7 +9,7 @@ class WordDetect: public Rule
 {
 public:
     WordDetect(const QString& str);
-    MatchResult match(const QString& text, int offset, const QStringList&) override;
+    int match(const QString& text, int offset) override;
 private:
     QString m_string;
 };

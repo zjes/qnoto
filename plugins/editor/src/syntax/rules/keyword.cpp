@@ -9,7 +9,7 @@ Keyword::Keyword(const QString& listName):
 {
 }
 
-MatchResult Keyword::match(const QString& text, int offset, const QStringList&)
+int Keyword::match(const QString& text, int offset)
 {
     if (!m_list)
         return offset;

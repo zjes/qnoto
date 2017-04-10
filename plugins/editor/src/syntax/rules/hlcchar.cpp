@@ -2,22 +2,16 @@
 
 namespace syntax {
 
-MatchResult HlCChar::match(const QString& text, int offset, const QStringList&)
+int HlCChar::match(const QString& text, int offset)
 {
-    if (text.size() < offset + 3)
+    static QRegExp rx("'["+QRegExp::escape("\\")+"]{0,2}.'");
+
+    int result = rx.indexIn(text, offset);
+
+    if (result != offset)
         return offset;
 
-    if (text[offset] != '\'')
-        return offset;
-
-    int newOff = offset+1;
-    if (text[newOff] == '\\')
-        ++newOff;
-
-    if (text[newOff+1] != '\'')
-        return offset;
-
-    return newOff+2;
+    return offset + rx.matchedLength();
 }
 
 }

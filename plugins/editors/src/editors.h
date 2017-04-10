@@ -26,8 +26,8 @@ private:
     void historyNavigate();
     void delNavigator(const QString& fileName);
 private:
-    QStackedWidget* m_widget;
-    HistoryNavigate* m_historyNavi;
+    QStackedWidget* m_widget = nullptr;
+    HistoryNavigate* m_historyNavi = nullptr;
     struct Editor
     {
         qnoto::EditorInstance* editor;
@@ -35,5 +35,5 @@ private:
     };
     QMap<QString, Editor> m_editors;
     QList<QString> m_stack;
-    QMenu* m_menuEdit;
+    QMenu* m_menuEdit = nullptr;
 };

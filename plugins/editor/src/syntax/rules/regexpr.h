@@ -9,7 +9,7 @@ class RegExpr: public Rule
 {
 public:
     RegExpr(const QString& str, bool insensitive, bool minimal);
-    MatchResult match(const QString& text, int offset, const QStringList&) override;
+    int match(const QString& text, int offset) override;
 private:
     QRegExp m_regexp;
 };

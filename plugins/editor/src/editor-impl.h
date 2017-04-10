@@ -37,9 +37,10 @@ public slots:
     void unmark();
 protected:
     void resizeEvent(QResizeEvent*e ) override;
-    void paintEvent(QPaintEvent* e) override;
+//    void paintEvent(QPaintEvent* e) override;
 private:
     QString                              m_fileName;
+    syntax::DefinitionPtr                m_definition;
     QScopedPointer<syntax::Highlighting> m_syntax;
     EditorMargin*                        m_margin = nullptr;
     syntax::ThemePtr                     m_theme;

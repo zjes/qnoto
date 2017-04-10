@@ -9,7 +9,7 @@ class StringDetect: public Rule
 {
 public:
     StringDetect(const QString& str, bool insensitive);
-    MatchResult match(const QString& text, int offset, const QStringList&) override;
+    int match(const QString& text, int offset) override;
 private:
     QString             m_string;
     Qt::CaseSensitivity m_insensitive;

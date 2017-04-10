@@ -4,12 +4,12 @@
 
 namespace syntax {
 
-MatchResult Float::match(const QString& text, int offset, const QStringList&)
+int Float::match(const QString& text, int offset)
 {
     static QRegExp rx("((\\d+\\.\\d*)|(\\.\\d+))([eE]\\-\\d+)?f?");
     int result = rx.indexIn(text, offset);
 
-    if (result == -1)
+    if (result != offset)
         return offset;
 
     return offset + rx.matchedLength();

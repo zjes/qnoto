@@ -2,18 +2,15 @@
 
 namespace syntax {
 
-MatchResult DetectIdentifier::match(const QString& text, int offset, const QStringList&)
+int DetectIdentifier::match(const QString& text, int offset)
 {
-    if (!text.at(offset).isLetter() && text.at(offset) != QLatin1Char('_'))
+    static QRegExp rx("[a-z0-9_]+", Qt::CaseInsensitive);
+    int result = rx.indexIn(text, offset);
+
+    if (result != offset)
         return offset;
 
-    for (int i = offset + 1; i < text.size(); ++i) {
-        const auto c = text.at(i);
-        if (!c.isLetterOrNumber() && c != QLatin1Char('_'))
-            return i;
-    }
-
-    return text.size();
+    return offset + rx.matchedLength();
 }
 
 }

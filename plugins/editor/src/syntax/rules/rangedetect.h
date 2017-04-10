@@ -9,7 +9,7 @@ class RangeDetect: public Rule
 {
 public:
     RangeDetect(const QChar& ch, const QChar& ch1);
-    MatchResult match(const QString& text, int offset, const QStringList&) override;
+    int match(const QString& text, int offset) override;
 private:
     QChar m_char;
     QChar m_char1;

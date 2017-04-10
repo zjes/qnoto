@@ -9,7 +9,7 @@ class DetectChar: public Rule
 {
 public:
     DetectChar(QChar ch);
-    MatchResult match(const QString& text, int offset, const QStringList&) override;
+    int match(const QString& text, int offset) override;
 private:
     QChar m_char;
 };

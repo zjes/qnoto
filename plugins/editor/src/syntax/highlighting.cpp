@@ -1,5 +1,6 @@
 #include <QDebug>
 #include <QStack>
+#include <QCoreApplication>
 #include "highlighting.h"
 #include "context.h"
 #include "rules/rule.h"
@@ -14,16 +15,12 @@ struct State
 
     ContextPtr switchState(const DefinitionPtr& def, const QString& ctx)
     {
-        if (ctx == "#pop"){
-            if (!contexts.isEmpty())
-                contexts.pop();
-            if (contexts.isEmpty()){
-                contexts.push(def->context());
-            }
-        } else if (ctx == "#pop#pop"){
-            for(int i = 0; i < 2; ++i){
+        if (ctx.startsWith("#pop")){
+            int offset = 0;
+            while(offset < ctx.length() && ctx.midRef(offset, 4).compare(QString("#pop")) == 0){
                 if (!contexts.isEmpty())
                     contexts.pop();
+                offset += 4;
             }
             if (contexts.isEmpty()){
                 contexts.push(def->context());
@@ -80,11 +77,12 @@ void Highlighting::highlightBlock(const QString &text)
         data->state->contexts.clear();
     }
     if (prevState && !prevState->contexts.isEmpty())
-        data->state->contexts.push(prevState->contexts.top());
+        data->state->contexts = prevState->contexts;
     else
         data->state->contexts.push(m_definition->context());
 
     highlightLine(text, data->state);
+    QCoreApplication::processEvents();
 }
 
 void Highlighting::highlightLine(const QString& text, const QSharedPointer<State>& state)
@@ -99,25 +97,32 @@ void Highlighting::highlightLine(const QString& text, const QSharedPointer<State
     int newOffset = offset;
 
     while(offset < text.length()){
+        bool lookAhead = false;
         for(const auto& rule: ctx->rules()){
-            MatchResult res = rule->match(text, offset);
-            if (res.offset <= offset)
+            newOffset = rule->match(text, offset);
+            if (newOffset <= offset)
                 continue;
 
-            newOffset = res.offset;
             QString nctx = rule->context();
             if(nctx.isEmpty())
                 continue;
 
-            if (rule->context() != "#stay"){
-                applyFormat(rule->attribute(), beginOffset, newOffset-beginOffset);
+            lookAhead = rule->lookAhead();
+            if (lookAhead){
                 ctx = state->switchState(m_definition, nctx);
             } else {
-                applyFormat(rule->attribute(), offset, newOffset-offset);
+                if (rule->context() != "#stay"){
+                    applyFormat(rule->attribute(), beginOffset, newOffset-beginOffset);
+                    ctx = state->switchState(m_definition, nctx);
+                } else {
+                    applyFormat(rule->attribute(), offset, newOffset-offset);
+                }
+                beginOffset = newOffset;
             }
-            beginOffset = newOffset;
             break;
         }
+        if (lookAhead)
+            continue;
 
         if (newOffset <= offset)
             newOffset = offset + 1;
@@ -154,10 +159,8 @@ void Highlighting::highlightLine(const QString& text, const QSharedPointer<State
 void Highlighting::applyFormat(const QString& frm, int from, int length)
 {
     ItemDataPtr item = m_definition->itemData(frm);
-    if (!item)
-        return;
 
-    if (m_theme){
+    if (item && m_theme){
         QTextCharFormat format;
         m_theme->format(format, item->name(), item->style());
         setFormat(from, length, format);

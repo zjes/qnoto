@@ -9,7 +9,7 @@ class AnyChar: public Rule
 {
 public:
     AnyChar(const QString& chars);
-    MatchResult match(const QString& text, int offset, const QStringList&) override;
+    int match(const QString& text, int offset) override;
 private:
     QString m_chars;
 };

@@ -10,7 +10,7 @@ class Keyword: public Rule
 {
 public:
     Keyword(const QString& listName);
-    MatchResult match(const QString& text, int offset, const QStringList&) override;
+    int match(const QString& text, int offset) override;
     const QString& listName() const;
     void setKeywordList(const KeywordListPtr& list);
 private:

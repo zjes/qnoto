@@ -7,7 +7,7 @@ IncludeRules::IncludeRules(bool includeAttrib):
     m_includeAttrib(includeAttrib)
 {}
 
-MatchResult IncludeRules::match(const QString& /*text*/, int offset, const QStringList&)
+int IncludeRules::match(const QString& /*text*/, int offset)
 {
     qWarning() << "Include" << context() << "not implemented yet, wrong place here";
     return offset;

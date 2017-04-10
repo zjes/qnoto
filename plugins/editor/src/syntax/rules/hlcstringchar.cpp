@@ -3,12 +3,12 @@
 
 namespace syntax {
 
-MatchResult HlCStringChar::match(const QString& text, int offset, const QStringList&)
+int HlCStringChar::match(const QString& text, int offset)
 {
     static QRegExp rx("\\[abefnrtv\"\'\\?\\\\.]+", Qt::CaseSensitive);
     int result = rx.indexIn(text, offset);
 
-    if (result == -1)
+    if (result != offset)
         return offset;
 
     return offset + rx.matchedLength();

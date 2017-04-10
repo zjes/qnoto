@@ -1,4 +1,5 @@
 #include <QRegExp>
+#include <QDebug>
 #include "regexpr.h"
 
 namespace syntax {
@@ -8,17 +9,21 @@ RegExpr::RegExpr(const QString& str, bool insensitive, bool minimal):
 {
     m_regexp.setCaseSensitivity(insensitive ? Qt::CaseInsensitive : Qt::CaseSensitive);
     m_regexp.setMinimal(minimal);
+    if (!m_regexp.isValid()){
+        qWarning() << "Regexp ! valid" << m_regexp.errorString();
+    }
 }
 
-MatchResult RegExpr::match(const QString& text, int offset, const QStringList&)
+int RegExpr::match(const QString& text, int offset)
 {
     int result = m_regexp.indexIn(text, offset);
-    if (result == -1)
+    if (result != offset)
         return offset;
 
     if (result == offset)
-        return MatchResult(offset + m_regexp.matchedLength(), m_regexp.capturedTexts());
-    return MatchResult(offset, result);
+        return offset + m_regexp.matchedLength();
+
+    return offset;
 }
 
 }

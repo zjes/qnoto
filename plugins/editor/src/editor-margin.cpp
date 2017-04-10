@@ -1,6 +1,7 @@
 #include <QDebug>
 #include <QPainter>
 #include <QTextBlock>
+#include <QTimer>
 
 #include "editor-margin.h"
 #include "editor-impl.h"
@@ -15,7 +16,9 @@ EditorMargin::EditorMargin(EditorImpl* editor):
     });
 
     connect(m_editor, &EditorImpl::updateRequest, [this](QRect, int){
-        repaint();
+        QTimer::singleShot(1, [this](){
+            repaint();
+        });
     });
 }
 
@@ -28,7 +31,7 @@ void EditorMargin::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
     const auto& theme = m_editor->theme();
-    if (theme){
+    if (theme && event){
         QTextCharFormat frm;
         theme->format(frm, "Margin");
 

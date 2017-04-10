@@ -1,5 +1,6 @@
 #include <QDebug>
 #include <QPainter>
+#include <QTimer>
 #include "editor-impl.h"
 #include "syntax/highlighting.h"
 #include "syntax/definition.h"
@@ -10,6 +11,7 @@
 
 EditorImpl::EditorImpl(const QString& fname, const syntax::DefinitionPtr& def):
     m_fileName(fname),
+    m_definition(def),
     m_syntax(def ? new syntax::Highlighting(document(), def) : nullptr)
 {
     setFont(Settings::font());
@@ -21,6 +23,8 @@ EditorImpl::EditorImpl(const QString& fname, const syntax::DefinitionPtr& def):
     if (Settings::showEndl())
         opt.setFlags(opt.flags() | QTextOption::ShowLineAndParagraphSeparators);
     document()->setDefaultTextOption(opt);
+
+    setTabStopWidth(4 * fontMetrics().width(' '));
 
     if (Settings::showLineNumbers()){
         m_margin = new EditorMargin(this);
@@ -93,18 +97,18 @@ void EditorImpl::unmark()
     repaint();
 }
 
-void EditorImpl::paintEvent(QPaintEvent* e)
-{
-    QPlainTextEdit::paintEvent(e);
-    if (m_finder.isSet){
-        //QPainter paint(viewport());
-        QTextBlock block = firstVisibleBlock();
-        while(block.isValid()){
-            if (!block.isVisible())
-                continue;
-            //int index = m_finder.find()
-            //if (block.text()
-            block = block.next();
-        }
-    }
-}
+//void EditorImpl::paintEvent(QPaintEvent* e)
+//{
+//    QPlainTextEdit::paintEvent(e);
+//    if (m_finder.isSet){
+//        //QPainter paint(viewport());
+//        QTextBlock block = firstVisibleBlock();
+//        while(block.isValid()){
+//            if (!block.isVisible())
+//                continue;
+//            //int index = m_finder.find()
+//            //if (block.text()
+//            block = block.next();
+//        }
+//    }
+//}

@@ -3,12 +3,12 @@
 
 namespace syntax {
 
-MatchResult HlCHex::match(const QString& text, int offset, const QStringList&)
+int HlCHex::match(const QString& text, int offset)
 {
     static QRegExp rx("0x[0-9abcdef]+", Qt::CaseInsensitive);
     int result = rx.indexIn(text, offset);
 
-    if (result == -1)
+    if (result  != offset)
         return offset;
 
     return offset + rx.matchedLength();

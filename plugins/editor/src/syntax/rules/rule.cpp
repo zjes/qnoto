@@ -58,4 +58,9 @@ const QString& Rule::attribute() const
     return m_attribute;
 }
 
+bool Rule::lookAhead() const
+{
+    return m_lookAhead;
+}
+
 }

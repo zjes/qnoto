@@ -109,6 +109,8 @@ qnoto_add_executable(${PROJECT_NAME}-test
         src/syntax/rules/hlcchar.h
         src/syntax/rules/hlchex.h
         src/syntax/rules/hlchex.cpp
+        src/syntax/rules/regexpr.h
+        src/syntax/rules/regexpr.cpp
 
     LIBS
         Qt5::Core

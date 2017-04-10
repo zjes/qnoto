@@ -9,7 +9,7 @@ class LineContinue: public Rule
 {
 public:
     LineContinue(const QChar& ch);
-    MatchResult match(const QString& text, int offset, const QStringList&) override;
+    int match(const QString& text, int offset) override;
 private:
     QChar m_char;
 };

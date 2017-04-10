@@ -7,7 +7,7 @@ RangeDetect::RangeDetect(const QChar& ch, const QChar& ch1):
     m_char1(ch1)
 {}
 
-MatchResult RangeDetect::match(const QString& text, int offset, const QStringList&)
+int RangeDetect::match(const QString& text, int offset)
 {
     if (text.size() - offset < 2 || text.at(offset) != m_char)
         return offset;

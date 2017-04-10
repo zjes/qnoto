@@ -5,27 +5,6 @@ namespace syntax {
 
 FORWARD(Rule)
 
-struct MatchResult
-{
-    MatchResult(int off):
-        offset(off)
-    {}
-
-    MatchResult(int off, const QStringList& capt):
-        offset(off),
-        captures(capt)
-    {}
-
-    MatchResult(int off, int skip):
-        offset(off),
-        skipOffset(skip)
-    {}
-
-    int         offset = 0;
-    int         skipOffset = 0;
-    QStringList captures = {};
-};
-
 class Rule: public Base
 {
 public:
@@ -42,8 +21,9 @@ public:
 public:
     const QString& context() const;
     const QString& attribute() const;
+    bool lookAhead() const;
 public:
-    virtual MatchResult match(const QString& text, int offset, const QStringList& = {}) = 0;
+    virtual int match(const QString& text, int offset) = 0;
 protected:
     QList<RulePtr> m_rules;
     QString        m_attribute;

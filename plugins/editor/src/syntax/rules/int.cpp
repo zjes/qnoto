@@ -2,7 +2,7 @@
 
 namespace syntax {
 
-MatchResult Int::match(const QString& text, int offset, const QStringList&)
+int Int::match(const QString& text, int offset)
 {
     while(offset < text.size() && text.at(offset).isDigit())
         ++offset;

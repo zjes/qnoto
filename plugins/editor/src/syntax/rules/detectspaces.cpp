@@ -2,10 +2,11 @@
 
 namespace syntax {
 
-MatchResult DetectSpaces::match(const QString& text, int offset, const QStringList&)
+int DetectSpaces::match(const QString& text, int offset)
 {
     while(offset < text.size() && text.at(offset).isSpace())
         ++offset;
+
     return offset;
 }
 

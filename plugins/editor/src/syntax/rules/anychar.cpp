@@ -6,7 +6,7 @@ AnyChar::AnyChar(const QString& chars):
     m_chars(chars)
 {}
 
-MatchResult AnyChar::match(const QString& text, int offset, const QStringList&)
+int AnyChar::match(const QString& text, int offset)
 {
     if (m_chars.contains(text.at(offset)))
         return offset + 1;
