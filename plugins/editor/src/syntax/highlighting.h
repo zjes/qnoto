@@ -15,6 +15,8 @@ public:
     Highlighting(QTextDocument* doc, const DefinitionPtr& def, bool markWhite = true);
     void setTheme(const ThemePtr& theme);
 
+    void setFound(QTextBlock& block, const std::map<int, QString>& idx);
+    void clearFound();
 protected:
     void highlightBlock(const QString &text) override;
     void highlightLine(const QString& text, const QSharedPointer<State>& state);

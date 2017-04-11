@@ -55,7 +55,7 @@ bool Theme::load(const QString& file)
 
     QJsonObject defaults = root["editor-colors"].toObject();
     for(const QString& key: defaults.keys()){
-        m_default.insert(key, defaults.value(key).toString());
+        m_default.insert(key, QColor(defaults.value(key).toString()));
     }
 
     return true;
@@ -76,14 +76,14 @@ void Theme::format(QTextCharFormat& frm, const QString& name, const QString& sty
         frm.setFontStrikeOut(style.strikeThrough);
     };
 
-    frm.setForeground(QColor(m_default.value("text-color")));
-    frm.setBackground(QColor(m_default.value("background-color")));
-
-    if (!name.isEmpty() && m_txtStyles.contains(name))
-        doFormat(frm, m_txtStyles[name]);
+    frm.setForeground(m_default.value("text-color"));
+    frm.setBackground(m_default.value("background-color"));
 
     if (!style.isEmpty() && m_txtStyleNums.contains(style))
         doFormat(frm, m_txtStyleNums[style]);
+
+    if (!name.isEmpty() && m_txtStyles.contains(name))
+        doFormat(frm, m_txtStyles[name]);
 }
 
 QColor Theme::color() const

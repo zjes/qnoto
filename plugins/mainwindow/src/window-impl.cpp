@@ -37,7 +37,8 @@ WindowImpl::WindowImpl():
 }
 
 WindowImpl::~WindowImpl()
-{}
+{
+}
 
 bool WindowImpl::openEditor(const QString& file)
 {

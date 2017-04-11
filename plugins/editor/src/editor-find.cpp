@@ -46,3 +46,12 @@ void EditorFind::activate()
     else
         setVisible(true);
 }
+
+void EditorFind::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return){
+        m_editor->doFind();
+    } else {
+        QWidget::keyPressEvent(event);
+    }
+}

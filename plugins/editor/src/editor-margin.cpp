@@ -15,10 +15,11 @@ EditorMargin::EditorMargin(EditorImpl* editor):
         repaint();
     });
 
-    connect(m_editor, &EditorImpl::updateRequest, [this](QRect, int){
-        QTimer::singleShot(1, [this](){
-            repaint();
-        });
+    connect(m_editor, &EditorImpl::updateRequest, [this](const QRect& rect, int dy){
+        if (dy)
+            scroll(0, dy);
+        else
+            update(0, rect.y(), width(), rect.height());
     });
 }
 

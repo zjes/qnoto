@@ -60,6 +60,7 @@ void Definition::init()
         }
     }
     m_items.insert("dsWhitespace", ItemDataPtr::create("Whitespace", "dsWhitespace"));
+    m_items.insert("dsFoundMark",  ItemDataPtr::create("FoundMark", "dsFoundMark"));
 }
 
 void Definition::addItemData(const ItemDataPtr& item)

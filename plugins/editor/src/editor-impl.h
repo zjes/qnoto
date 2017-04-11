@@ -16,6 +16,7 @@ class Finder
 public:
     QString pattern;
     bool isSet = false;
+    int find(const QString& text, QString& width, int offset = 0);
 public:
 };
 
@@ -35,9 +36,9 @@ public:
 public slots:
     void startFind(const QString& text);
     void unmark();
+    void doFind();
 protected:
     void resizeEvent(QResizeEvent*e ) override;
-//    void paintEvent(QPaintEvent* e) override;
 private:
     QString                              m_fileName;
     syntax::DefinitionPtr                m_definition;

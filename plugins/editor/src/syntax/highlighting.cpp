@@ -1,6 +1,7 @@
 #include <QDebug>
 #include <QStack>
 #include <QCoreApplication>
+#include <QTextDocument>
 #include "highlighting.h"
 #include "context.h"
 #include "rules/rule.h"
@@ -38,7 +39,8 @@ struct State
 
 struct UserData: public QTextBlockUserData
 {
-    QSharedPointer<State> state;
+    QSharedPointer<State>  state;
+    std::map<int, QString> markFound;
 };
 
 Highlighting::Highlighting(QTextDocument* doc, const DefinitionPtr& def, bool markWhite):
@@ -55,7 +57,7 @@ void Highlighting::setTheme(const ThemePtr& theme)
 
 void Highlighting::highlightBlock(const QString &text)
 {
-    if (!m_definition)
+    if (!m_definition || !currentBlock().isValid())
         return;
 
     QSharedPointer<State> prevState;
@@ -82,7 +84,9 @@ void Highlighting::highlightBlock(const QString &text)
         data->state->contexts.push(m_definition->context());
 
     highlightLine(text, data->state);
-    QCoreApplication::processEvents();
+    for(const auto& mark: data->markFound){
+        applyFormat("dsFoundMark", mark.first, mark.second.length());
+    }
 }
 
 void Highlighting::highlightLine(const QString& text, const QSharedPointer<State>& state)
@@ -158,10 +162,10 @@ void Highlighting::highlightLine(const QString& text, const QSharedPointer<State
 
 void Highlighting::applyFormat(const QString& frm, int from, int length)
 {
+    static QTextCharFormat format;
     ItemDataPtr item = m_definition->itemData(frm);
 
     if (item && m_theme){
-        QTextCharFormat format;
         m_theme->format(format, item->name(), item->style());
         setFormat(from, length, format);
     }
@@ -171,6 +175,30 @@ void Highlighting::contextChanged(const ContextPtr& oc, int& begin, int end)
 {
     applyFormat(oc->attribute(), begin, end);
     begin = end;
+}
+
+void Highlighting::setFound(QTextBlock& block, const std::map<int, QString>& idx)
+{
+    UserData* data = dynamic_cast<UserData*>(block.userData());
+    if (!data) {
+        data = new UserData;
+        block.setUserData(data);
+    }
+    data->markFound = idx;
+    rehighlightBlock(block);
+}
+
+void Highlighting::clearFound()
+{
+    for(QTextBlock block = document()->firstBlock(); block.isValid(); block = block.next()){
+        UserData* data = dynamic_cast<UserData*>(block.userData());
+        if (data){
+            bool rehigh = !data->markFound.empty();
+            data->markFound.clear();
+            if (rehigh)
+                rehighlightBlock(block);
+        }
+    }
 }
 
 }

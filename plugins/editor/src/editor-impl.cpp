@@ -12,7 +12,7 @@
 EditorImpl::EditorImpl(const QString& fname, const syntax::DefinitionPtr& def):
     m_fileName(fname),
     m_definition(def),
-    m_syntax(def ? new syntax::Highlighting(document(), def) : nullptr)
+    m_syntax(def ? new syntax::Highlighting(document(), def, Settings::showWhite()) : nullptr)
 {
     setFont(Settings::font());
     setWordWrapMode(Settings::wordWrap() ? QTextOption::WordWrap : QTextOption::NoWrap);
@@ -86,29 +86,51 @@ void EditorImpl::resizeEvent(QResizeEvent *e)
 
 void EditorImpl::startFind(const QString& text)
 {
+    m_syntax->clearFound();
     m_finder.pattern = text;
     m_finder.isSet = true;
-    repaint();
+    QString found;
+    for(QTextBlock block = document()->firstBlock(); block.isValid(); block = block.next()){
+        int index = -1;
+        std::map<int, QString> idxs;
+        while((index = m_finder.find(block.text(), found, index+1)) != -1){
+            idxs.emplace(index, found);
+        }
+        if (!idxs.empty()){
+            m_syntax->setFound(block, idxs);
+        }
+    }
+}
+
+void EditorImpl::doFind()
+{
+    QString found;
+    auto cur = textCursor();
+    for(QTextBlock block = cur.block(); block.isValid(); block = block.next()){
+        int index = block == cur.block() ? cur.positionInBlock() : -1;
+        while((index = m_finder.find(block.text(), found, index+1)) != -1){
+            if (block.position()+index <= cur.position())
+                continue;
+            cur.setPosition(block.position()+index);
+            cur.selectionStart();
+            cur.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, found.length());
+            cur.selectionEnd();
+            setTextCursor(cur);
+            return;
+        }
+    }
 }
 
 void EditorImpl::unmark()
 {
     m_finder.isSet = false;
-    repaint();
+    m_syntax->clearFound();
 }
 
-//void EditorImpl::paintEvent(QPaintEvent* e)
-//{
-//    QPlainTextEdit::paintEvent(e);
-//    if (m_finder.isSet){
-//        //QPainter paint(viewport());
-//        QTextBlock block = firstVisibleBlock();
-//        while(block.isValid()){
-//            if (!block.isVisible())
-//                continue;
-//            //int index = m_finder.find()
-//            //if (block.text()
-//            block = block.next();
-//        }
-//    }
-//}
+//--------------------------------------------------------------------------------------------------
+
+int Finder::find(const QString& text, QString& found, int offset)
+{
+    found = pattern;
+    return text.indexOf(pattern, offset, Qt::CaseInsensitive);
+}
