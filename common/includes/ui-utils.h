@@ -54,10 +54,9 @@ inline LayoutT* setLayout(QWidget* widget, const Args&... args)
 
 inline QIcon icon(const QString& name)
 {
-    //if (QIcon::hasThemeIcon(name))
-    //    return QIcon::fromTheme(name);
-    //return QIcon::fromTheme(":/icons/"+QIcon::themeName()+"/"+name);
-    return QIcon::fromTheme(":/icons/std/"+name);
+    if (QIcon::hasThemeIcon(name))
+        return QIcon::fromTheme(name);
+    return QIcon::fromTheme(":/icons/"+QIcon::themeName()+"/"+name);
 }
 
 }
