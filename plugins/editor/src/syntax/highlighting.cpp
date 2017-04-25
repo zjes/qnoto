@@ -2,6 +2,8 @@
 #include <QStack>
 #include <QCoreApplication>
 #include <QTextDocument>
+#include <QPainter>
+#include <QPlainTextDocumentLayout>
 #include "highlighting.h"
 #include "context.h"
 #include "rules/rule.h"
@@ -55,37 +57,62 @@ void Highlighting::setTheme(const ThemePtr& theme)
 }
 
 
-void Highlighting::highlightBlock(const QString &text)
+void Highlighting::highlightBlock(const QString& text)
 {
-    if (!m_definition || !currentBlock().isValid())
-        return;
+    if (m_definition){
+        QSharedPointer<State> prevState;
+        if (currentBlock().position() > 0) {
+            UserData* prevData = dynamic_cast<UserData*>(currentBlock().previous().userData());
+            if (prevData)
+                prevState = prevData->state;
+        }
 
-    QSharedPointer<State> prevState;
-    if (currentBlock().position() > 0) {
-        UserData* prevData = dynamic_cast<UserData*>(currentBlock().previous().userData());
-        if (prevData)
-            prevState = prevData->state;
+        UserData* data = dynamic_cast<UserData*>(currentBlockUserData());
+        if (!data) {
+            data = new UserData;
+            setCurrentBlockUserData(data);
+        }
+        if (!data->state){
+            data->state = QSharedPointer<State>::create();
+        } else {
+            data->state->contexts.clear();
+        }
+        if (prevState && !prevState->contexts.isEmpty())
+            data->state->contexts = prevState->contexts;
+        else
+            data->state->contexts.push(m_definition->context());
+
+        highlightLine(text, data->state);
     }
 
-    UserData* data = dynamic_cast<UserData*>(currentBlockUserData());
-    if (!data) {
-        data = new UserData;
-        setCurrentBlockUserData(data);
+    if (m_markWhite){
+        QTextCharFormat format;
+        if (fetchFormat("dsWhitespace", format)) {
+            int offset = 0;
+            int from = 0;
+            bool white = false;
+            while (offset < text.length()) {
+                if (text[offset].isSpace() && !white) {
+                    white = true;
+                    from = offset;
+                }
+                else if (!text[offset].isSpace() && white) {
+                    white = false;
+                    applyFormat(format, from, offset - from);
+                }
+                ++offset;
+            }
+            if (white && from < offset)
+                applyFormat(format, from, offset - from);
+        }
     }
 
-    if (!data->state){
-        data->state = QSharedPointer<State>::create();
-    } else {
-        data->state->contexts.clear();
-    }
-    if (prevState && !prevState->contexts.isEmpty())
-        data->state->contexts = prevState->contexts;
-    else
-        data->state->contexts.push(m_definition->context());
-
-    highlightLine(text, data->state);
-    for(const auto& mark: data->markFound){
-        applyFormat("dsFoundMark", mark.first, mark.second.length());
+    QTextCharFormat format;
+    if (fetchFormat("dsFoundMark", format)) {
+        UserData* data = dynamic_cast<UserData*>(currentBlockUserData());
+        for (const auto& mark : data->markFound) {
+            applyFormat(format, mark.first, mark.second.length());
+        }
     }
 }
 
@@ -141,35 +168,31 @@ void Highlighting::highlightLine(const QString& text, const QSharedPointer<State
         if (!nctx.isEmpty())
             ctx = state->switchState(m_definition, nctx);
     }
-    if (m_markWhite){
-        offset = 0;
-        int from = 0;
-        bool white = false;
-        while(offset < text.length()){
-            if (text[offset].isSpace() && !white){
-                white = true;
-                from = offset;
-            } else if (!text[offset].isSpace() && white){
-                white = false;
-                applyFormat("dsWhitespace", from, offset-from);
-            }
-            ++offset;
-        }
-        if (white && from < offset)
-            applyFormat("dsWhitespace", from, offset-from);
+}
+
+bool Highlighting::fetchFormat(const QString& frm, QTextCharFormat& format)
+{
+    ItemDataPtr item = m_definition->itemData(frm);
+    if (item && m_theme) {
+        m_theme->format(format, item->name(), item->style());
+        return true;
     }
+    return false;
 }
 
 void Highlighting::applyFormat(const QString& frm, int from, int length)
 {
     static QTextCharFormat format;
-    ItemDataPtr item = m_definition->itemData(frm);
-
-    if (item && m_theme){
-        m_theme->format(format, item->name(), item->style());
-        setFormat(from, length, format);
+    if (fetchFormat(frm, format)) {
+        applyFormat(format, from, length);
     }
 }
+
+void Highlighting::applyFormat(const QTextCharFormat& format, int from, int length)
+{
+    setFormat(from, length, format);
+}
+
 
 void Highlighting::contextChanged(const ContextPtr& oc, int& begin, int end)
 {
@@ -185,20 +208,39 @@ void Highlighting::setFound(QTextBlock& block, const std::map<int, QString>& idx
         block.setUserData(data);
     }
     data->markFound = idx;
-    rehighlightBlock(block);
+    //rehighlightBlock(block);
 }
 
-void Highlighting::clearFound()
+void Highlighting::clearFound(QTextBlock& block)
 {
-    for(QTextBlock block = document()->firstBlock(); block.isValid(); block = block.next()){
-        UserData* data = dynamic_cast<UserData*>(block.userData());
-        if (data){
-            bool rehigh = !data->markFound.empty();
-            data->markFound.clear();
-            if (rehigh)
-                rehighlightBlock(block);
+    UserData* data = static_cast<UserData*>(block.userData());
+    if (data){
+        bool rehigh = !data->markFound.empty();
+        data->markFound.clear();
+        if (rehigh){
+            //rehighlightBlock(block);
         }
     }
+}
+
+bool Highlighting::paintBlock(const QTextBlock& block, QPainter& painter, const QRect& bounding)
+{
+    UserData* data = dynamic_cast<UserData*>(block.userData());
+    if (!data)
+        return false;
+    if (data->markFound.empty())
+        return false;
+
+    auto line = block.layout()->lineAt(0);
+    painter.setPen(QColor("#aeaeae"));
+    painter.setBrush(QColor("#dddd99"));
+    for (const auto& mark : data->markFound) {
+        qreal left = line.cursorToX(mark.first);
+        qreal right = line.cursorToX(mark.first+mark.second.length());
+        QRectF pr = QRectF(bounding.left()+left, bounding.top(), right - left, bounding.height());
+        painter.drawRoundedRect(pr, 3, 3);
+    }
+    return true;
 }
 
 }

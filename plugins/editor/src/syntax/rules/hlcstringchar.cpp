@@ -1,17 +1,17 @@
-#include <QRegExp>
+#include <QRegularExpression>
 #include "hlcstringchar.h"
 
 namespace syntax {
 
 int HlCStringChar::match(const QString& text, int offset)
 {
-    static QRegExp rx("\\[abefnrtv\"\'\\?\\\\.]+", Qt::CaseSensitive);
-    int result = rx.indexIn(text, offset);
+    static QRegularExpression rx("\\[abefnrtv\"\'\\?\\\\.]+", QRegularExpression::OptimizeOnFirstUsageOption);
+    auto result = rx.match(text, offset, QRegularExpression::NormalMatch, QRegularExpression::AnchoredMatchOption);
 
-    if (result != offset)
+    if (!result.hasMatch())
         return offset;
 
-    return offset + rx.matchedLength();
+    return offset + result.capturedLength(0);
 }
 
 }

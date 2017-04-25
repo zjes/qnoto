@@ -4,5 +4,19 @@
         <file>icons/arrowdown.png</file>
         <file>icons/close.png</file>
         <file>icons/split-horizontal.png</file>
+        <file>icons/std/window-close.png</file>
+        <file>icons/std/edit-clear.png</file>
+        <file>icons/std/edit-copy.png</file>
+        <file>icons/std/edit-cut.png</file>
+        <file>icons/std/edit-delete.png</file>
+        <file>icons/std/edit-find.png</file>
+        <file>icons/std/edit-paste.png</file>
+        <file>icons/std/edit-redo.png</file>
+        <file>icons/std/edit-rename.png</file>
+        <file>icons/std/edit-select.png</file>
+        <file>icons/std/edit-select-all.png</file>
+        <file>icons/std/edit-undo.png</file>
+        <file>icons/std/go-previous.png</file>
+        <file>icons/std/go-next.png</file>
     </qresource>
 </RCC>

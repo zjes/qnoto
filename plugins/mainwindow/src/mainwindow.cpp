@@ -5,6 +5,9 @@
 MainWindow::MainWindow()
 {
     QResource::registerResource("resources.rcc");
+    if (QIcon::themeName().isEmpty()){
+        QIcon::setThemeName("std");
+    }
 }
 
 MainWindow::~MainWindow()

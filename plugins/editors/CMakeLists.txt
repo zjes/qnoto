@@ -9,8 +9,11 @@ qnoto_add_plugin(${PROJECT_NAME}
     SOURCES
         src/editors.h
         src/editors.cpp
-        src/editor-factory.h
-        src/editor-factory.cpp
+        src/editors-factory.h
+        src/editors-factory.cpp
+        src/editors-find.h
+        src/editors-find.cpp
+        src/editors-find.ui
         src/history-navigate.h
         src/history-navigate.cpp
     LIBS

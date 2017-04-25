@@ -1,14 +1,19 @@
-#include <QRegExp>
 #include <QDebug>
 #include "regexpr.h"
 
 namespace syntax {
 
 RegExpr::RegExpr(const QString& str, bool insensitive, bool minimal):
-    m_regexp(str)
+    m_regexp(str, QRegularExpression::OptimizeOnFirstUsageOption)
 {
-    m_regexp.setCaseSensitivity(insensitive ? Qt::CaseInsensitive : Qt::CaseSensitive);
-    m_regexp.setMinimal(minimal);
+    auto options = m_regexp.patternOptions();
+    if (!insensitive)
+        options |= QRegularExpression::CaseInsensitiveOption;
+    if (minimal)
+        options |= QRegularExpression::InvertedGreedinessOption;
+
+    m_regexp.setPatternOptions(options);
+
     if (!m_regexp.isValid()){
         qWarning() << "Regexp ! valid" << m_regexp.errorString();
     }
@@ -16,14 +21,12 @@ RegExpr::RegExpr(const QString& str, bool insensitive, bool minimal):
 
 int RegExpr::match(const QString& text, int offset)
 {
-    int result = m_regexp.indexIn(text, offset);
-    if (result != offset)
+    auto result = m_regexp.match(text, offset, QRegularExpression::NormalMatch, QRegularExpression::AnchoredMatchOption);
+
+    if (!result.hasMatch())
         return offset;
 
-    if (result == offset)
-        return offset + m_regexp.matchedLength();
-
-    return offset;
+    return offset + result.capturedLength(0);
 }
 
 }

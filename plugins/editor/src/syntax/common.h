@@ -1,5 +1,6 @@
 #pragma once
 #include <QSharedPointer>
+#include <set>
 
 namespace syntax {
 
@@ -19,8 +20,9 @@ public:
 
 inline bool isDelimeter(const QChar& ch)
 {
-    static QString delims = "\t !%&()*+,-./:;<=>?[\\]^{|}~";
-    return std::binary_search(delims.constBegin(), delims.constEnd(), ch);
+    static std::set<QChar> delims{ '\t', ' ', '!', '%', ',', '&', '(', ')', '*', '+', '-', '"',
+        '.', '/', ':', ';', '\'', '<', '=', '>', '?', '[', '\\', ']', '^', '{', '|', '}', '~' };
+    return delims.find(ch) != delims.end();
 }
 
 }

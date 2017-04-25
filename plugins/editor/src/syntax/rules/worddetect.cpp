@@ -1,21 +1,19 @@
-#include <QRegExp>
 #include "worddetect.h"
 
 namespace syntax {
 
 WordDetect::WordDetect(const QString& str):
-    m_string(str)
+    m_regexp("\\b" + str + "\\b", QRegularExpression::OptimizeOnFirstUsageOption)
 {}
 
 int WordDetect::match(const QString& text, int offset)
 {
-    static QRegExp rx("\\b"+m_string+"\\b");
-    int result = rx.indexIn(text, offset);
+    auto result = m_regexp.match(text, offset, QRegularExpression::NormalMatch, QRegularExpression::AnchoredMatchOption);
 
-    if (result != offset)
+    if (!result.hasMatch())
         return offset;
 
-    return offset + rx.matchedLength();
+    return offset + result.capturedLength(0);
 }
 
 }

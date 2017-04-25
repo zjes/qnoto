@@ -20,9 +20,6 @@ qnoto_add_plugin(${PROJECT_NAME}
         src/editor-margin.cpp
         src/editor-header.h
         src/editor-header.cpp
-        src/editor-find.h
-        src/editor-find.cpp
-        src/editor-find.ui
 
         src/syntax/common.h
         src/syntax/manager.h

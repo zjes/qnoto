@@ -77,7 +77,7 @@ void Theme::format(QTextCharFormat& frm, const QString& name, const QString& sty
     };
 
     frm.setForeground(m_default.value("text-color"));
-    frm.setBackground(m_default.value("background-color"));
+    //frm.setBackground(m_default.value("background-color"));
 
     if (!style.isEmpty() && m_txtStyleNums.contains(style))
         doFormat(frm, m_txtStyleNums[style]);

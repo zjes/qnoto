@@ -4,19 +4,19 @@
 #include <QSettings>
 #include <QMenuBar>
 #include "editors.h"
-#include "editor-factory.h"
+#include "editors-factory.h"
+#include "editors-find.h"
 #include "history-navigate.h"
 
 #include "includes/file-handler.h"
+#include "includes/ui-utils.h"
 
 
 Editors::Editors():
-    m_widget(new QStackedWidget)
+    m_widget(new QStackedWidget),
+    m_find(new EditorsFind)
 {
-    QVBoxLayout* lay = new QVBoxLayout;
-    lay->setContentsMargins(0, 0, 0, 0);
-    lay->addWidget(m_widget);
-    setLayout(lay);
+    qnoto::setLayout<QVBoxLayout>(this, m_widget, m_find);
 
     QAction *a = new QAction(this);
     a->setShortcut(Qt::ControlModifier + Qt::Key_Tab);
@@ -44,7 +44,8 @@ void Editors::openFile(const QString& file)
         m_widget->setCurrentIndex(m_editors[file].index);
         qnoto::FileHandler::instance().activated(file);
     } else {
-        auto* ed = EditorFactory::create(file);
+        auto* ed = EditorsFactory::create(file);
+        connect(ed, &qnoto::EditorInstance::escape, this, &Editors::escape);
         if(ed) {
             int index = m_widget->addWidget(ed);
             m_editors.insert(file, {ed, index});
@@ -52,9 +53,21 @@ void Editors::openFile(const QString& file)
             qnoto::FileHandler::instance().activated(file);
         }
     }
-    m_editors[file].editor->populateMenu(m_menuEdit);
+    m_find->setEditor(m_editors[file].editor);
+    m_editors[file].editor->populateMenu(this, m_menuEdit);
     m_editors[file].editor->setFocus();
     block = false;
+}
+
+void Editors::showFind()
+{
+    m_find->activate();
+}
+
+void Editors::escape()
+{
+    if (m_find->isVisible())
+        m_find->hide();
 }
 
 void Editors::historyNavigate()

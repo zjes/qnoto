@@ -8,7 +8,6 @@
 #include "includes/ui-utils.h"
 #include "editor-impl.h"
 #include "editor-header.h"
-#include "editor-find.h"
 #include "preferences.h"
 
 EditorInstance::~EditorInstance()
@@ -26,15 +25,14 @@ bool EditorInstance::init(const QString& fileName)
 
     m_widget.reset(new EditorImpl(fileName, syntax::Manager::instance().definition(fileName)));
     m_header.reset(new EditorHeader(m_widget.data()));
-    m_find.reset(new EditorFind(m_widget.data()));
 
     m_widget->init();
     m_widget->load(reinterpret_cast<char*>(filedata));
+    connect(m_widget.data(), &EditorImpl::escape, this, &EditorInstance::escape);
 
     qnoto::setLayout<QVBoxLayout>(this,
         m_header.data(),
-        m_widget.data(),
-        m_find.data()
+        m_widget.data()
     );
 
     f.unmap(filedata);
@@ -47,12 +45,12 @@ void EditorInstance::focusInEvent(QFocusEvent *)
     m_widget->setFocus();
 }
 
-void EditorInstance::populateMenu(QMenu* menu)
+void EditorInstance::populateMenu(qnoto::Editors* manager, QMenu* menu)
 {
     if (!m_editMenu){
         m_editMenu.reset(new QMenu);
         QAction* undoAct = m_editMenu->addAction(
-            QIcon::fromTheme("edit-undo"),
+            qnoto::icon("edit-undo"),
             tr("Undo"),
             m_widget.data(), &EditorImpl::undo,
             QKeySequence::Undo
@@ -61,7 +59,7 @@ void EditorInstance::populateMenu(QMenu* menu)
         connect(m_widget.data(), &EditorImpl::undoAvailable, undoAct, &QAction::setEnabled);
 
         QAction* redoAct = m_editMenu->addAction(
-            QIcon::fromTheme("edit-redo"),
+            qnoto::icon("edit-redo"),
             tr("Redo"),
             m_widget.data(), &EditorImpl::redo,
             QKeySequence::Redo
@@ -72,7 +70,7 @@ void EditorInstance::populateMenu(QMenu* menu)
         m_editMenu->addSeparator();
 
         QAction* cutAct = m_editMenu->addAction(
-            QIcon::fromTheme("edit-cut"),
+            qnoto::icon("edit-cut"),
             tr("Cut"),
             m_widget.data(), &EditorImpl::cut,
             QKeySequence::Cut
@@ -81,7 +79,7 @@ void EditorInstance::populateMenu(QMenu* menu)
         connect(m_widget.data(), &EditorImpl::copyAvailable, cutAct, &QAction::setEnabled);
 
         QAction* copyAct = m_editMenu->addAction(
-            QIcon::fromTheme("edit-copy"),
+            qnoto::icon("edit-copy"),
             tr("Copy"),
             m_widget.data(), &EditorImpl::copy,
             QKeySequence::Copy
@@ -90,7 +88,7 @@ void EditorInstance::populateMenu(QMenu* menu)
         connect(m_widget.data(), &EditorImpl::copyAvailable, copyAct, &QAction::setEnabled);
 
         QAction* pasteAct = m_editMenu->addAction(
-            QIcon::fromTheme("edit-paste"),
+            qnoto::icon("edit-paste"),
             tr("Paste"),
             m_widget.data(), &EditorImpl::paste,
             QKeySequence::Paste
@@ -104,10 +102,24 @@ void EditorInstance::populateMenu(QMenu* menu)
         m_editMenu->addSeparator();
 
         m_editMenu->addAction(
-            QIcon::fromTheme("edit-find"),
+            qnoto::icon("edit-find"),
             tr("Find"),
-            m_find.data(), &EditorFind::activate,
+            manager, &qnoto::Editors::showFind,
             QKeySequence::Find
+        );
+
+        m_editMenu->addAction(
+            qnoto::icon("edit-find-next"),
+            tr("Find next"),
+            m_widget.data(), &EditorImpl::doFind,
+            QKeySequence::FindNext
+        );
+
+        m_editMenu->addAction(
+            qnoto::icon("edit-find-previous"),
+            tr("Find previous"),
+            m_widget.data(), &EditorImpl::doFind,
+            QKeySequence::FindPrevious
         );
     }
 
@@ -117,13 +129,25 @@ void EditorInstance::populateMenu(QMenu* menu)
     }
 }
 
-void EditorInstance::keyPressEvent(QKeyEvent *event)
+void EditorInstance::setSearch(const QString& text)
 {
-    if (event->key() == Qt::Key_Escape && m_find->isVisible()){
-        m_find->hide();
-        event->ignore();
-        m_widget->setFocus();
-    }
+    m_widget->startFind(text);
+}
+
+QString EditorInstance::selectedText() const
+{
+    return m_widget->textCursor().selectedText();
+}
+
+void EditorInstance::doSearch()
+{
+    m_widget->doFind();
+}
+
+void EditorInstance::escape()
+{
+    emit qnoto::EditorInstance::escape();
+    m_widget->setFocus();
 }
 
 //--------------------------------------------------------------------------------------------------

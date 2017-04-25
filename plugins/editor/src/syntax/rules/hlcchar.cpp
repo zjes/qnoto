@@ -1,17 +1,17 @@
+#include <QRegularExpression>
 #include "hlcchar.h"
 
 namespace syntax {
 
 int HlCChar::match(const QString& text, int offset)
 {
-    static QRegExp rx("'["+QRegExp::escape("\\")+"]{0,2}.'");
+    static QRegularExpression rx("'[" + QRegularExpression::escape("\\") + "]{0,2}.'", QRegularExpression::CaseInsensitiveOption | QRegularExpression::OptimizeOnFirstUsageOption);
+    auto result = rx.match(text, offset, QRegularExpression::NormalMatch, QRegularExpression::AnchoredMatchOption);
 
-    int result = rx.indexIn(text, offset);
-
-    if (result != offset)
+    if (!result.hasMatch())
         return offset;
 
-    return offset + rx.matchedLength();
+    return offset + result.capturedLength(0);
 }
 
 }

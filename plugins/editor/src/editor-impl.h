@@ -37,8 +37,12 @@ public slots:
     void startFind(const QString& text);
     void unmark();
     void doFind();
+signals:
+    void escape();
 protected:
     void resizeEvent(QResizeEvent*e ) override;
+    void paintEvent(QPaintEvent *e) override;
+    void keyPressEvent(QKeyEvent *event) override;
 private:
     QString                              m_fileName;
     syntax::DefinitionPtr                m_definition;

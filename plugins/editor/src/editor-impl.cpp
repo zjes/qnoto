@@ -1,6 +1,11 @@
 #include <QDebug>
+#include <QTime>
 #include <QPainter>
 #include <QTimer>
+#include <QKeyEvent>
+#include <QScrollBar>
+#include <QStyle>
+#include <QStyleOption>
 #include "editor-impl.h"
 #include "syntax/highlighting.h"
 #include "syntax/definition.h"
@@ -8,6 +13,38 @@
 #include "settings.h"
 #include "editor-margin.h"
 #include "includes/file-handler.h"
+
+class ScrollBar: public QScrollBar
+{
+public:
+    void setPosses(const QList<int>& posses, int count)
+    {
+        m_posses = posses;
+        m_count = count;
+        update();
+    }
+protected:
+    void paintEvent(QPaintEvent* event) override
+    {
+        QScrollBar::paintEvent(event);
+        QPainter p(this);
+
+        QStyleOptionSlider opt;
+        initStyleOption(&opt);
+        QRect groove = style()->subControlRect(QStyle::CC_ScrollBar, &opt, QStyle::SC_ScrollBarGroove, this);
+
+        p.setPen("#00aa00");
+        p.setBrush(QColor("#00aa00"));
+        qreal pxs = static_cast<qreal>(groove.height())/m_count;
+
+        for(int pos: m_posses){
+            p.drawRect(5, static_cast<int>(groove.top()+pxs*pos), groove.width()-10, 2);
+        }
+    }
+private:
+    QList<int> m_posses;
+    int m_count;
+};
 
 EditorImpl::EditorImpl(const QString& fname, const syntax::DefinitionPtr& def):
     m_fileName(fname),
@@ -34,6 +71,8 @@ EditorImpl::EditorImpl(const QString& fname, const syntax::DefinitionPtr& def):
     connect(this, &EditorImpl::modificationChanged, [this](bool modified){
         qnoto::FileHandler::instance().modified(fileName(), modified);
     });
+
+    setVerticalScrollBar(new ScrollBar);
 }
 
 EditorImpl::~EditorImpl()
@@ -84,22 +123,57 @@ void EditorImpl::resizeEvent(QResizeEvent *e)
     }
 }
 
+void EditorImpl::paintEvent(QPaintEvent* event)
+{
+    QPainter paint(viewport());
+
+    QList<int> posses;
+    QTextBlock block = firstVisibleBlock();
+    while(block.isValid()){
+        if (m_syntax->paintBlock(block, paint, blockBoundingGeometry(block).translated(contentOffset()).toRect()))
+            posses.append(block.blockNumber());
+        block = block.next();
+    }
+    dynamic_cast<ScrollBar*>(verticalScrollBar())->setPosses(posses, blockCount());
+    QPlainTextEdit::paintEvent(event);
+}
+
+void EditorImpl::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Escape)
+        emit escape();
+    QWidget::keyPressEvent(event);
+}
+
 void EditorImpl::startFind(const QString& text)
 {
-    m_syntax->clearFound();
     m_finder.pattern = text;
     m_finder.isSet = true;
+
+    if (text.isEmpty()){
+        unmark();
+        return;
+    }
+
     QString found;
-    for(QTextBlock block = document()->firstBlock(); block.isValid(); block = block.next()){
+    std::map<int, QString> idxs;
+    auto* doc = document();
+    QTextFrameFormat frm;
+    frm.setBorder(1);
+
+    for (QTextBlock block = doc->begin(); block != doc->end(); block = block.next()){
         int index = -1;
-        std::map<int, QString> idxs;
         while((index = m_finder.find(block.text(), found, index+1)) != -1){
             idxs.emplace(index, found);
         }
         if (!idxs.empty()){
             m_syntax->setFound(block, idxs);
+            idxs.clear();
+        } else {
+            m_syntax->clearFound(block);
         }
     }
+    qobject_cast<QPlainTextDocumentLayout*>(document()->documentLayout())->requestUpdate();
 }
 
 void EditorImpl::doFind()
@@ -124,7 +198,11 @@ void EditorImpl::doFind()
 void EditorImpl::unmark()
 {
     m_finder.isSet = false;
-    m_syntax->clearFound();
+    auto* doc = document();
+    for (QTextBlock block = doc->begin(); block != doc->end(); block = block.next()){
+        m_syntax->clearFound(block);
+    }
+    qobject_cast<QPlainTextDocumentLayout*>(document()->documentLayout())->requestUpdate();
 }
 
 //--------------------------------------------------------------------------------------------------

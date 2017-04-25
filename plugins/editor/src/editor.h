@@ -4,7 +4,6 @@
 
 class EditorImpl;
 class EditorHeader;
-class EditorFind;
 
 class EditorInstance: public qnoto::EditorInstance
 {
@@ -12,15 +11,19 @@ class EditorInstance: public qnoto::EditorInstance
 public:
     ~EditorInstance();
     bool init(const QString& fileName) override;
-    void populateMenu(QMenu* menu) override;
+    void populateMenu(qnoto::Editors* manager, QMenu* menu) override;
+
+    void setSearch(const QString& text = {}) override;
+    QString selectedText() const override;
+    void doSearch() override;
 
 protected:
     void focusInEvent(QFocusEvent *) override;
-    void keyPressEvent(QKeyEvent *event) override;
+private:
+    void escape();
 private:
     QScopedPointer<EditorImpl>   m_widget;
     QScopedPointer<EditorHeader> m_header;
-    QScopedPointer<EditorFind>   m_find;
     QScopedPointer<QMenu>        m_editMenu;
 };
 

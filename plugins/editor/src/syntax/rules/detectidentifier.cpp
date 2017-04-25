@@ -1,16 +1,17 @@
+#include <QRegularExpression>
 #include "detectidentifier.h"
 
 namespace syntax {
 
 int DetectIdentifier::match(const QString& text, int offset)
 {
-    static QRegExp rx("[a-z0-9_]+", Qt::CaseInsensitive);
-    int result = rx.indexIn(text, offset);
+    static QRegularExpression rx("[a-z0-9_]+", QRegularExpression::CaseInsensitiveOption | QRegularExpression::OptimizeOnFirstUsageOption);
+    auto result = rx.match(text, offset, QRegularExpression::NormalMatch, QRegularExpression::AnchoredMatchOption);
 
-    if (result != offset)
+    if (!result.hasMatch())
         return offset;
 
-    return offset + rx.matchedLength();
+    return offset + result.capturedLength(0);
 }
 
 }

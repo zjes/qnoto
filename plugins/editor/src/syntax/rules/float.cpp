@@ -1,18 +1,18 @@
 #include <QDebug>
-#include <QRegExp>
+#include <QRegularExpression>
 #include "float.h"
 
 namespace syntax {
 
 int Float::match(const QString& text, int offset)
 {
-    static QRegExp rx("((\\d+\\.\\d*)|(\\.\\d+))([eE]\\-\\d+)?f?");
-    int result = rx.indexIn(text, offset);
+    static QRegularExpression rx("((\\d+\\.\\d*)|(\\.\\d+))([eE]\\-\\d+)?f?", QRegularExpression::CaseInsensitiveOption | QRegularExpression::OptimizeOnFirstUsageOption);
+    auto result = rx.match(text, offset, QRegularExpression::NormalMatch, QRegularExpression::AnchoredMatchOption);
 
-    if (result != offset)
+    if (!result.hasMatch())
         return offset;
 
-    return offset + rx.matchedLength();
+    return offset + result.capturedLength(0);
 }
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include <QWidget>
 #include <QVBoxLayout>
+#include <QIcon>
 
 namespace qnoto {
 
@@ -49,6 +50,14 @@ inline LayoutT* setLayout(QWidget* widget, const Args&... args)
     LayoutT* lay = createLayout<LayoutT>(args...);
     widget->setLayout(lay);
     return lay;
+}
+
+inline QIcon icon(const QString& name)
+{
+    //if (QIcon::hasThemeIcon(name))
+    //    return QIcon::fromTheme(name);
+    //return QIcon::fromTheme(":/icons/"+QIcon::themeName()+"/"+name);
+    return QIcon::fromTheme(":/icons/std/"+name);
 }
 
 }

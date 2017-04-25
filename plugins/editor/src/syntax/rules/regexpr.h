@@ -1,4 +1,5 @@
 #pragma once
+#include <QRegularExpression>
 #include "rule.h"
 
 namespace syntax {
@@ -11,7 +12,7 @@ public:
     RegExpr(const QString& str, bool insensitive, bool minimal);
     int match(const QString& text, int offset) override;
 private:
-    QRegExp m_regexp;
+    QRegularExpression m_regexp;
 };
 
 }

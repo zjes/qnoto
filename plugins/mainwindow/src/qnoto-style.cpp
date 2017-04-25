@@ -28,7 +28,7 @@ bool QNotoStyle::isPanel(const QWidget* widget) const
 
     const QWidget *w = widget;
     while(w){
-        if (w && w->property("panelWidget").toBool()){
+        if (w && (w->property("panelWidget").toBool() || w->property("panelWidget2").toBool())){
             return true;
         }
         w = w->parentWidget();
@@ -84,6 +84,13 @@ void QNotoStyle::polish(QWidget *widget)
             for (int i = 0; i < QPalette::NColorGroups; ++i) {
                 pal.setBrush(QPalette::ColorGroup(i), QPalette::Background, m_panel);
             }
+            widget->setPalette(pal);
+        }
+        if (widget->property("panelWidget2").toBool()) {
+            widget->setBackgroundRole(QPalette::Background);
+            widget->setAutoFillBackground(true);
+            QPalette pal = widget->palette();
+            pal.setColor(QPalette::Background, m_panelColor);
             widget->setPalette(pal);
         }
         QPalette pal = widget->palette();

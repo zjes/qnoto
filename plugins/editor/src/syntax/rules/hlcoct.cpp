@@ -1,17 +1,17 @@
-#include <QRegExp>
+#include <QRegularExpression>
 #include "hlcoct.h"
 
 namespace syntax {
 
 int HlCOct::match(const QString& text, int offset)
 {
-    static QRegExp rx("0o[0-7]+", Qt::CaseInsensitive);
-    int result = rx.indexIn(text, offset);
+    static QRegularExpression rx("0o[0-7]+", QRegularExpression::CaseInsensitiveOption | QRegularExpression::OptimizeOnFirstUsageOption);
+    auto result = rx.match(text, offset, QRegularExpression::NormalMatch, QRegularExpression::AnchoredMatchOption);
 
-    if (result != offset)
+    if (!result.hasMatch())
         return offset;
 
-    return offset + rx.matchedLength();
+    return offset + result.capturedLength(0);
 }
 
 }

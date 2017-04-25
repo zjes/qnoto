@@ -1,9 +1,9 @@
 #include <QDebug>
 #include <QFileInfo>
-#include "editor-factory.h"
+#include "editors-factory.h"
 #include "includes/pluginmanager.h"
 
-qnoto::EditorInstance* EditorFactory::create(const QString& fname)
+qnoto::EditorInstance* EditorsFactory::create(const QString& fname)
 {
     QFileInfo info(fname);
     if (info.suffix() == "py")
