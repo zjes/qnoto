@@ -27,6 +27,8 @@ Manager::Manager()
     for(const auto& info: m_info){
         qDebug() << "loaded:" << info.name << "pattern:" << info.pattern << "from:" << info.syntaxFile;
     }
+    m_default = DefinitionPtr::create();
+    m_default->init(true);
 }
 
 void Manager::readFile(const QFileInfo& info)
@@ -64,7 +66,7 @@ DefinitionPtr Manager::definition(const QString& file)
             }
         }
     }
-    return {};
+    return m_default;
 }
 
 void Manager::initDefinition(DefinitionPtr& def, const QString& file)

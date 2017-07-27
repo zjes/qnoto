@@ -3,7 +3,7 @@ cmake_policy(VERSION 3.5)
 
 include(GenerateExportHeader)
 
-qnoto_init(editor QT Core Widgets Xml Test)
+qnoto_init(editor QT Core Widgets Concurrent Xml Test)
 
 qnoto_add_plugin(${PROJECT_NAME}
     SOURCES
@@ -38,6 +38,10 @@ qnoto_add_plugin(${PROJECT_NAME}
         src/syntax/item-data.cpp
         src/syntax/theme.h
         src/syntax/theme.cpp
+        src/syntax/syntaxhighlighter.cpp
+        src/syntax/syntaxhighlighter.h
+        src/syntax/formater.cpp
+        src/syntax/formater.h
 
         src/syntax/rules/rule.h
         src/syntax/rules/rule.cpp
@@ -81,6 +85,7 @@ qnoto_add_plugin(${PROJECT_NAME}
         Qt5::Core
         Qt5::Widgets
         Qt5::Xml
+        Qt5::Concurrent
         common
 )
 

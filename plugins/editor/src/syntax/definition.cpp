@@ -32,8 +32,9 @@ ContextPtr Definition::context(const QString& name)
     return m_contexts.value(name);
 }
 
-void Definition::init()
+void Definition::init(bool isEmpty)
 {
+    m_isEmpty = isEmpty;
     for(const auto& ctx: m_contexts){
         for(const RulePtr& rule: ctx->rules()){
             if (!cast(Keyword, rule))
@@ -71,6 +72,11 @@ void Definition::addItemData(const ItemDataPtr& item)
 ItemDataPtr Definition::itemData(const QString& name) const
 {
     return m_items.value(name);
+}
+
+bool Definition::isEmpty() const
+{
+    return m_isEmpty;
 }
 
 

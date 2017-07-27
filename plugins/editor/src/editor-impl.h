@@ -50,4 +50,5 @@ private:
     EditorMargin*                        m_margin = nullptr;
     syntax::ThemePtr                     m_theme;
     Finder                               m_finder;
+    bool                                 m_needPaintSearch = false;
 };

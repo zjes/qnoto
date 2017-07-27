@@ -3,6 +3,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTextFormat>
+#include <QMutex>
 #include "theme.h"
 
 namespace syntax {

@@ -46,7 +46,7 @@ struct UserData: public QTextBlockUserData
 };
 
 Highlighting::Highlighting(QTextDocument* doc, const DefinitionPtr& def, bool markWhite):
-    QSyntaxHighlighter(doc),
+    SyntaxHighlighter(doc),
     m_definition(def),
     m_markWhite(markWhite)
 {}
@@ -57,32 +57,39 @@ void Highlighting::setTheme(const ThemePtr& theme)
 }
 
 
-void Highlighting::highlightBlock(const QString& text)
+void Highlighting::highlightBlock(TextBlock& block)
 {
-    if (m_definition){
+    QMutexLocker locker(&m_mutex);
+    if (!block.block.isValid() || !block.block.isVisible())
+        return;
+
+    if (m_definition && !m_definition->isEmpty()){
         QSharedPointer<State> prevState;
-        if (currentBlock().position() > 0) {
-            UserData* prevData = dynamic_cast<UserData*>(currentBlock().previous().userData());
+        if (block.block.position() > 0) {
+            UserData* prevData = dynamic_cast<UserData*>(block.block.previous().userData());
             if (prevData)
                 prevState = prevData->state;
         }
 
-        UserData* data = dynamic_cast<UserData*>(currentBlockUserData());
+        UserData* data = dynamic_cast<UserData*>(block.block.userData());
         if (!data) {
             data = new UserData;
-            setCurrentBlockUserData(data);
+            block.block.setUserData(data);
         }
         if (!data->state){
             data->state = QSharedPointer<State>::create();
         } else {
             data->state->contexts.clear();
         }
-        if (prevState && !prevState->contexts.isEmpty())
-            data->state->contexts = prevState->contexts;
-        else
+        if (prevState && !prevState->contexts.isEmpty() && prevState->contexts.last()->lineEndContext() == "#stay"){
+            data->state->contexts.push(prevState->contexts.last());
+        } else {
             data->state->contexts.push(m_definition->context());
+        }
 
-        highlightLine(text, data->state);
+        highlightLine(block, data->state);
+        UserData* nextData = dynamic_cast<UserData*>(block.block.next().userData());
+        block.stateChanged = nextData && data->state->contexts.last() != nextData->state->contexts.first();
     }
 
     if (m_markWhite){
@@ -91,6 +98,7 @@ void Highlighting::highlightBlock(const QString& text)
             int offset = 0;
             int from = 0;
             bool white = false;
+            QString text = block.block.text();
             while (offset < text.length()) {
                 if (text[offset].isSpace() && !white) {
                     white = true;
@@ -98,28 +106,31 @@ void Highlighting::highlightBlock(const QString& text)
                 }
                 else if (!text[offset].isSpace() && white) {
                     white = false;
-                    applyFormat(format, from, offset - from);
+                    applyFormat(block, format, from, offset - from);
                 }
                 ++offset;
             }
             if (white && from < offset)
-                applyFormat(format, from, offset - from);
+                applyFormat(block, format, from, offset - from);
         }
     }
 
     QTextCharFormat format;
     if (fetchFormat("dsFoundMark", format)) {
-        UserData* data = dynamic_cast<UserData*>(currentBlockUserData());
-        for (const auto& mark : data->markFound) {
-            applyFormat(format, mark.first, mark.second.length());
+        UserData* data = dynamic_cast<UserData*>(block.block.userData());
+        if (data){
+            for (const auto& mark : data->markFound) {
+                applyFormat(block, format, mark.first, mark.second.length());
+            }
         }
     }
 }
 
-void Highlighting::highlightLine(const QString& text, const QSharedPointer<State>& state)
+void Highlighting::highlightLine(TextBlock& block, const QSharedPointer<State>& state)
 {
     ContextPtr ctx = state->contexts.top();
 
+    QString text = block.block.text();
     int offset = 0;
     while(offset < text.length() && text[offset].isSpace())
         ++offset;
@@ -143,10 +154,10 @@ void Highlighting::highlightLine(const QString& text, const QSharedPointer<State
                 ctx = state->switchState(m_definition, nctx);
             } else {
                 if (rule->context() != "#stay"){
-                    applyFormat(rule->attribute(), beginOffset, newOffset-beginOffset);
+                    applyFormat(block, rule->attribute(), beginOffset, newOffset-beginOffset);
                     ctx = state->switchState(m_definition, nctx);
                 } else {
-                    applyFormat(rule->attribute(), offset, newOffset-offset);
+                    applyFormat(block, rule->attribute(), offset, newOffset-offset);
                 }
                 beginOffset = newOffset;
             }
@@ -161,7 +172,7 @@ void Highlighting::highlightLine(const QString& text, const QSharedPointer<State
         offset = newOffset;
     }
     if (beginOffset < offset)
-        applyFormat(ctx->attribute(), beginOffset, text.size()-beginOffset);
+        applyFormat(block, ctx->attribute(), beginOffset, text.size()-beginOffset);
 
     if (ctx){
         QString nctx = ctx->lineEndContext();
@@ -180,23 +191,23 @@ bool Highlighting::fetchFormat(const QString& frm, QTextCharFormat& format)
     return false;
 }
 
-void Highlighting::applyFormat(const QString& frm, int from, int length)
+void Highlighting::applyFormat(TextBlock& block, const QString& format, int from, int length)
 {
-    static QTextCharFormat format;
-    if (fetchFormat(frm, format)) {
-        applyFormat(format, from, length);
+    QTextCharFormat f;
+    if (fetchFormat(format, f)) {
+        applyFormat(block, f, from, length);
     }
 }
 
-void Highlighting::applyFormat(const QTextCharFormat& format, int from, int length)
+void Highlighting::applyFormat(TextBlock& block, const QTextCharFormat& format, int from, int length)
 {
-    setFormat(from, length, format);
+    block.setFormat(from, length, format);
 }
 
 
-void Highlighting::contextChanged(const ContextPtr& oc, int& begin, int end)
+void Highlighting::contextChanged(TextBlock& block, const ContextPtr& oc, int& begin, int end)
 {
-    applyFormat(oc->attribute(), begin, end);
+    applyFormat(block, oc->attribute(), begin, end);
     begin = end;
 }
 
@@ -226,11 +237,6 @@ void Highlighting::clearFound(QTextBlock& block)
 bool Highlighting::paintBlock(const QTextBlock& block, QPainter& painter, const QRect& bounding)
 {
     UserData* data = dynamic_cast<UserData*>(block.userData());
-    if (!data)
-        return false;
-    if (data->markFound.empty())
-        return false;
-
     auto line = block.layout()->lineAt(0);
     painter.setPen(QColor("#aeaeae"));
     painter.setBrush(QColor("#dddd99"));
@@ -240,6 +246,14 @@ bool Highlighting::paintBlock(const QTextBlock& block, QPainter& painter, const 
         QRectF pr = QRectF(bounding.left()+left, bounding.top(), right - left, bounding.height());
         painter.drawRoundedRect(pr, 3, 3);
     }
+    return true;
+}
+
+bool Highlighting::hasUserData(const QTextBlock& block)
+{
+    UserData* data = dynamic_cast<UserData*>(block.userData());
+    if (!data || data->markFound.empty())
+        return false;
     return true;
 }
 

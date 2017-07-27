@@ -28,6 +28,7 @@ private:
         DefinitionPtr definition;
     };
     QList<Info> m_info;
+    DefinitionPtr m_default;
 };
 
 }

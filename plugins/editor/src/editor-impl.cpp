@@ -29,16 +29,18 @@ protected:
         QScrollBar::paintEvent(event);
         QPainter p(this);
 
-        QStyleOptionSlider opt;
-        initStyleOption(&opt);
-        QRect groove = style()->subControlRect(QStyle::CC_ScrollBar, &opt, QStyle::SC_ScrollBarGroove, this);
+        if (m_count && m_posses.size()){
+            QStyleOptionSlider opt;
+            initStyleOption(&opt);
+            QRect groove = style()->subControlRect(QStyle::CC_ScrollBar, &opt, QStyle::SC_ScrollBarGroove, this);
 
-        p.setPen("#00aa00");
-        p.setBrush(QColor("#00aa00"));
-        qreal pxs = static_cast<qreal>(groove.height())/m_count;
+            p.setPen("#00aa00");
+            p.setBrush(QColor("#00aa00"));
+            qreal pxs = static_cast<qreal>(groove.height())/m_count;
 
-        for(int pos: m_posses){
-            p.drawRect(5, static_cast<int>(groove.top()+pxs*pos), groove.width()-10, 2);
+            for(int pos: m_posses){
+                p.drawRect(5, static_cast<int>(groove.top()+pxs*pos), groove.width()-10, 2);
+            }
         }
     }
 private:
@@ -101,11 +103,7 @@ const syntax::ThemePtr& EditorImpl::theme() const
 
 void EditorImpl::load(const QString& text)
 {
-    setEnabled(false);
-    setUndoRedoEnabled(false);
     setPlainText(text);
-    setUndoRedoEnabled(true);
-    setEnabled(true);
 }
 
 const QString& EditorImpl::fileName() const
@@ -127,14 +125,21 @@ void EditorImpl::paintEvent(QPaintEvent* event)
 {
     QPainter paint(viewport());
 
-    QList<int> posses;
     QTextBlock block = firstVisibleBlock();
-    while(block.isValid()){
-        if (m_syntax->paintBlock(block, paint, blockBoundingGeometry(block).translated(contentOffset()).toRect()))
-            posses.append(block.blockNumber());
+    int top = static_cast<int>(blockBoundingGeometry(block).translated(contentOffset()).top());
+    int bottom = top + static_cast<int>(blockBoundingRect(block).height());
+
+    while (block.isValid() && top <= event->rect().bottom()) {
+        if (block.isVisible() && bottom >= event->rect().top()) {
+            if (m_syntax->hasUserData(block))
+                m_syntax->paintBlock(block, paint, blockBoundingGeometry(block).translated(contentOffset()).toRect());
+        }
+
         block = block.next();
+        top = bottom;
+        bottom = top + static_cast<int>(blockBoundingRect(block).height());
     }
-    dynamic_cast<ScrollBar*>(verticalScrollBar())->setPosses(posses, blockCount());
+
     QPlainTextEdit::paintEvent(event);
 }
 
@@ -142,7 +147,7 @@ void EditorImpl::keyPressEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Escape)
         emit escape();
-    QWidget::keyPressEvent(event);
+    QPlainTextEdit::keyPressEvent(event);
 }
 
 void EditorImpl::startFind(const QString& text)
@@ -151,6 +156,7 @@ void EditorImpl::startFind(const QString& text)
     m_finder.isSet = true;
 
     if (text.isEmpty()){
+        dynamic_cast<ScrollBar*>(verticalScrollBar())->setPosses({}, blockCount());
         unmark();
         return;
     }
@@ -161,6 +167,9 @@ void EditorImpl::startFind(const QString& text)
     QTextFrameFormat frm;
     frm.setBorder(1);
 
+    QList<int> posses;
+    posses.reserve(blockCount());
+
     for (QTextBlock block = doc->begin(); block != doc->end(); block = block.next()){
         int index = -1;
         while((index = m_finder.find(block.text(), found, index+1)) != -1){
@@ -169,10 +178,13 @@ void EditorImpl::startFind(const QString& text)
         if (!idxs.empty()){
             m_syntax->setFound(block, idxs);
             idxs.clear();
+            posses.append(block.blockNumber());
         } else {
             m_syntax->clearFound(block);
         }
     }
+
+    dynamic_cast<ScrollBar*>(verticalScrollBar())->setPosses(posses, blockCount());
     qobject_cast<QPlainTextDocumentLayout*>(document()->documentLayout())->requestUpdate();
 }
 
@@ -202,6 +214,7 @@ void EditorImpl::unmark()
     for (QTextBlock block = doc->begin(); block != doc->end(); block = block.next()){
         m_syntax->clearFound(block);
     }
+    m_needPaintSearch = true;
     qobject_cast<QPlainTextDocumentLayout*>(document()->documentLayout())->requestUpdate();
 }
 

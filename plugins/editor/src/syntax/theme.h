@@ -34,8 +34,8 @@ public:
     QColor color() const;
     QColor backgroud() const;
 private:
-    QMap<QString, Style> m_txtStyles;
-    QMap<QString, Style> m_txtStyleNums;
+    QMap<QString, Style>  m_txtStyles;
+    QMap<QString, Style>  m_txtStyleNums;
     QMap<QString, QColor> m_default;
 };
 
