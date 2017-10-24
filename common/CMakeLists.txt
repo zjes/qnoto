@@ -17,7 +17,7 @@ qnoto_add_lib(${PROJECT_NAME}
 
         includes/plugins/mainwindow.h
         includes/plugins/editor.h
-        includes/plugins/leftside.h
+        includes/plugins/tool-plugin.h
         includes/plugins/editors.h
     SOURCES
         src/plugin.cpp

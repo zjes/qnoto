@@ -5,13 +5,7 @@
 
 qnoto::EditorInstance* EditorsFactory::create(const QString& fname)
 {
-    QFileInfo info(fname);
-    if (info.suffix() == "py")
-        qDebug() << "python";
-
-    auto* ed = qnoto::plugin<qnoto::Editor>()->create();
-    qDebug() << ed;
-    if (ed){
+    if (auto* ed = qnoto::plugin<qnoto::Editor>()->create()){
         ed->init(fname);
         return ed;
     }

@@ -1,7 +1,7 @@
 #include <QLabel>
 #include <QFontMetrics>
-#include "editor-header.h"
-#include "editor-impl.h"
+#include "header.h"
+#include "impl.h"
 #include "includes/ui-utils.h"
 
 EditorHeader::EditorHeader(EditorImpl* editor):
@@ -30,7 +30,7 @@ EditorHeader::EditorHeader(EditorImpl* editor):
     lay->setSpacing(4);
 
     connect(m_editor, &EditorImpl::cursorPositionChanged, [this, line, col](){
-        line->setText(QString("%1").arg(m_editor->textCursor().blockNumber()));
+        line->setText(QString("%1").arg(m_editor->textCursor().blockNumber()+1));
         col->setText(QString("%1").arg(m_editor->textCursor().columnNumber()));
     });
 

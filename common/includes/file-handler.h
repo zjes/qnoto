@@ -1,5 +1,6 @@
 #pragma once
 #include <QObject>
+#include <QMutex>
 #include "common-export.h"
 
 namespace qnoto {
@@ -10,7 +11,9 @@ class COMMON_EXPORT FileHandler: public QObject
 public:
     static FileHandler& instance();
     ~FileHandler();
-    const QStringList& openedFiles();
+    const QStringList& openedFiles() const;
+    void close(const QString& fileName);
+    void activate(const QString& fileName);
 signals:
     void activated(const QString& file);
     void closed(const QString& file);
@@ -18,7 +21,8 @@ signals:
 private:
     FileHandler();
 private:
-    QStringList m_files;
+    mutable QMutex m_mutex;
+    QStringList    m_files;
 };
 
 }

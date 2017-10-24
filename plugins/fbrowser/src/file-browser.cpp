@@ -17,8 +17,8 @@ QString FileBrowser::title() const
     return tr("File browser");
 }
 
-QWidget* FileBrowser::create() const
+QWidget* FileBrowser::create(QWidget* parent) const
 {
-    return new ListWidget;
+    return new ListWidget(parent);
 }
 

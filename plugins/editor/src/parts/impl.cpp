@@ -5,48 +5,18 @@
 #include <QKeyEvent>
 #include <QScrollBar>
 #include <QStyle>
-#include <QStyleOption>
-#include "editor-impl.h"
+#include <QToolTip>
+
+#include "impl.h"
+#include "margin.h"
+#include "scroll.h"
+
 #include "syntax/highlighting.h"
 #include "syntax/definition.h"
 #include "syntax/theme.h"
+#include "syntax/userdata.h"
 #include "settings.h"
-#include "editor-margin.h"
 #include "includes/file-handler.h"
-
-class ScrollBar: public QScrollBar
-{
-public:
-    void setPosses(const QList<int>& posses, int count)
-    {
-        m_posses = posses;
-        m_count = count;
-        update();
-    }
-protected:
-    void paintEvent(QPaintEvent* event) override
-    {
-        QScrollBar::paintEvent(event);
-        QPainter p(this);
-
-        if (m_count && m_posses.size()){
-            QStyleOptionSlider opt;
-            initStyleOption(&opt);
-            QRect groove = style()->subControlRect(QStyle::CC_ScrollBar, &opt, QStyle::SC_ScrollBarGroove, this);
-
-            p.setPen("#00aa00");
-            p.setBrush(QColor("#00aa00"));
-            qreal pxs = static_cast<qreal>(groove.height())/m_count;
-
-            for(int pos: m_posses){
-                p.drawRect(5, static_cast<int>(groove.top()+pxs*pos), groove.width()-10, 2);
-            }
-        }
-    }
-private:
-    QList<int> m_posses;
-    int m_count;
-};
 
 EditorImpl::EditorImpl(const QString& fname, const syntax::DefinitionPtr& def):
     m_fileName(fname),
@@ -71,10 +41,10 @@ EditorImpl::EditorImpl(const QString& fname, const syntax::DefinitionPtr& def):
     }
 
     connect(this, &EditorImpl::modificationChanged, [this](bool modified){
-        qnoto::FileHandler::instance().modified(fileName(), modified);
+        emit qnoto::FileHandler::instance().modified(fileName(), modified);
     });
 
-    setVerticalScrollBar(new ScrollBar);
+    setVerticalScrollBar(new Scroll);
 }
 
 EditorImpl::~EditorImpl()
@@ -84,16 +54,17 @@ EditorImpl::~EditorImpl()
 void EditorImpl::init()
 {
     syntax::ThemePtr theme = syntax::ThemePtr::create();
-    if (theme->load(Settings::theme())){
-        if (m_syntax)
-            m_syntax->setTheme(theme);
+    if (!theme->load(Settings::theme()))
+        return;
 
-        auto pal = palette();
-        pal.setColor(QPalette::Base, theme->backgroud());
-        pal.setColor(QPalette::Text, theme->color());
-        setPalette(pal);
-        m_theme = theme;
-    }
+    if (m_syntax)
+        m_syntax->setTheme(theme);
+
+    auto pal = palette();
+    pal.setColor(QPalette::Base, theme->backgroud());
+    pal.setColor(QPalette::Text, theme->color());
+    setPalette(pal);
+    m_theme = theme;
 }
 
 const syntax::ThemePtr& EditorImpl::theme() const
@@ -104,6 +75,11 @@ const syntax::ThemePtr& EditorImpl::theme() const
 void EditorImpl::load(const QString& text)
 {
     setPlainText(text);
+}
+
+QString EditorImpl::text() const
+{
+    return toPlainText();
 }
 
 const QString& EditorImpl::fileName() const
@@ -143,6 +119,48 @@ void EditorImpl::paintEvent(QPaintEvent* event)
     QPlainTextEdit::paintEvent(event);
 }
 
+bool EditorImpl::event(QEvent* ev)
+{
+    if (ev->type() != QEvent::ToolTip)
+        return QPlainTextEdit::event(ev);
+
+    QHelpEvent *te = static_cast<QHelpEvent*>(ev);
+    QTextCursor cursor = cursorForPosition(te->pos());
+    QTextBlock block = cursor.block();
+    if (!block.isValid())
+        return QPlainTextEdit::event(ev);
+
+    syntax::Folding* folding = syntax::folding(block);
+    if (!folding)
+        return QPlainTextEdit::event(ev);
+
+    if (folding->closed){
+        QPoint mpos = viewport()->mapFromParent(te->pos());
+        qreal left = block.layout()->lineAt(0).cursorToX(folding->offset);
+        if (mpos.x() > left && mpos.x() < left+40){
+            QStringList text = {block.text()};
+            for(auto blk = block.next(); blk.isValid(); blk = blk.next()){
+                text << blk.text();
+
+                if (folding->checkEndBlock(blk))
+                    break;
+            }
+
+            QRectF br = blockBoundingGeometry(block).translated(contentOffset());
+            QRectF pr = QRectF(left, br.top(), 40, br.height());
+            QFont fnt = font();
+            fnt.setPointSize(static_cast<int>(ceil(font().pointSize()*0.8)));
+            QToolTip::setFont(fnt);
+            QToolTip::showText(te->globalPos(), text.join("\n"), this, pr.toRect());
+        } else {
+            QToolTip::hideText();
+            ev->ignore();
+        }
+    }
+
+    return true;
+}
+
 void EditorImpl::keyPressEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Escape)
@@ -156,7 +174,7 @@ void EditorImpl::startFind(const QString& text)
     m_finder.isSet = true;
 
     if (text.isEmpty()){
-        dynamic_cast<ScrollBar*>(verticalScrollBar())->setPosses({}, blockCount());
+        dynamic_cast<Scroll*>(verticalScrollBar())->setPosses({}, blockCount());
         unmark();
         return;
     }
@@ -184,7 +202,7 @@ void EditorImpl::startFind(const QString& text)
         }
     }
 
-    dynamic_cast<ScrollBar*>(verticalScrollBar())->setPosses(posses, blockCount());
+    dynamic_cast<Scroll*>(verticalScrollBar())->setPosses(posses, blockCount());
     qobject_cast<QPlainTextDocumentLayout*>(document()->documentLayout())->requestUpdate();
 }
 

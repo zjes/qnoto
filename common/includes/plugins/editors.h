@@ -12,10 +12,15 @@ class COMMON_EXPORT Editors: public Plugin
 {
     Q_OBJECT
 public:
-    virtual void openFile(const QString& file) = 0;
-    virtual void setMenu(QMenu* menu) = 0;
+    using MenuList = QList<QAction*>;
+public:
+    virtual void openFile(const QString& fileName) = 0;
+    virtual void closeFile(const QString& fileName) = 0;
+    virtual const MenuList& actions() const = 0;
 public:
     virtual void showFind() = 0;
+signals:
+    void updateEditMenu(const MenuList& actions);
 };
 
 }

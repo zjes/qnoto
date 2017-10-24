@@ -95,7 +95,11 @@ struct Walker
         } else if (is(el, "itemData")){
             visitItemData(el, out);
         } else {
-            qDebug() << "unhandled tag" << el.tagName();
+            QStringList txt;
+            for(auto e = el; !e.isNull(); e = e.parentNode().toElement()){
+                txt.prepend(e.tagName());
+            }
+            qDebug() << "unhandled tag" << txt.join("/");
             walk(el, out);
         }
     }
@@ -280,7 +284,6 @@ void Parser::parse(DefinitionPtr& def)
     }
     file.close();
 
-    qDebug() << "wlk start";
     Walker::visit(doc.documentElement(), def);
     def->init();
 }

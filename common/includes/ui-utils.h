@@ -2,6 +2,7 @@
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QIcon>
+#include <QAction>
 
 namespace qnoto {
 
@@ -58,5 +59,61 @@ inline QIcon icon(const QString& name)
         return QIcon::fromTheme(name);
     return QIcon::fromTheme(":/icons/"+QIcon::themeName()+"/"+name);
 }
+
+template<typename Parent>
+class Action
+{
+public:
+    Action(Parent* parent, const QString& name):
+        m_action(new QAction(parent))
+    {
+        m_action->setProperty("name", name);
+    }
+    Action& title(const QString& title)
+    {
+        m_action->setText(title);
+        m_action->setProperty("orig-text", title);
+        return *this;
+    }
+    Action& enabled(bool enabled)
+    {
+        m_action->setEnabled(enabled);
+        return *this;
+    }
+    template<typename Func>
+    Action& enabled(Func&& /*func*/)
+    {
+        //m_action->connect(m_action, &QAction::)
+        return *this;
+    }
+    Action& shortcut(const QKeySequence& seq)
+    {
+        m_action->setShortcut(seq);
+        return *this;
+    }
+    Action& icon(const QIcon& icon)
+    {
+        m_action->setIcon(icon);
+        return *this;
+    }
+    Action& icon(const QString& icon)
+    {
+        m_action->setIcon(qnoto::icon(icon));
+        return *this;
+    }
+    template<typename Func>
+    Action& action(Func&& func)
+    {
+        m_action->connect(m_action, &QAction::triggered, qobject_cast<Parent*>(m_action->parent()), std::move(func));
+        return *this;
+    }
+    operator QAction*() const
+    {
+        return m_action;
+    }
+private:
+    QAction* m_action = nullptr;
+};
+
 
 }

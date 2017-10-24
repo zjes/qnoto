@@ -6,10 +6,10 @@
 #include <QStackedWidget>
 #include <QSizePolicy>
 #include <QComboBox>
-#include "left-side-containter.h"
+#include "tool-place.h"
 #include "includes/pluginmanager.h"
 
-Header::Header(const QList<qnoto::LeftSidePtr>& plugins, const QString& selected, QWidget* parent):
+Header::Header(const QList<qnoto::ToolPlugin*>& plugins, const QString& selected, QWidget* parent):
     QWidget(parent)
 {
     setLayout(new QHBoxLayout(this));
@@ -49,7 +49,7 @@ Header::Header(const QList<qnoto::LeftSidePtr>& plugins, const QString& selected
     });
 }
 
-void Header::addItem(qnoto::LeftSide* plugin)
+void Header::addItem(qnoto::ToolPlugin* plugin)
 {
     m_box->addItem(plugin->title(), plugin->name());
 }
@@ -61,7 +61,7 @@ QString Header::selectedPluginName() const
 
 //--------------------------------------------------------------------------------------------------
 
-LeftSideContainter::LeftSideContainter(const QString& selected, QWidget *parent):
+ToolPlace::ToolPlace(const QString& selected, QWidget *parent):
     QWidget(parent)
 {
     collectPlugins();
@@ -79,36 +79,36 @@ LeftSideContainter::LeftSideContainter(const QString& selected, QWidget *parent)
     layout()->addWidget(m_header);
     layout()->addWidget(m_stack);
 
-    connect(m_header, &Header::addSplit,   this, &LeftSideContainter::addSplit);
-    connect(m_header, &Header::closeSplit, this, &LeftSideContainter::closeSplit);
-    connect(m_header, &Header::showPlugin, this, &LeftSideContainter::showPlugin);
+    connect(m_header, &Header::addSplit,   this, &ToolPlace::addSplit);
+    connect(m_header, &Header::closeSplit, this, &ToolPlace::closeSplit);
+    connect(m_header, &Header::showPlugin, this, &ToolPlace::showPlugin);
 }
 
-void LeftSideContainter::collectPlugins()
+void ToolPlace::collectPlugins()
 {
-    for(qnoto::Plugin* pl: qnoto::plugins<qnoto::LeftSide>()){
-        auto* ls = qobject_cast<qnoto::LeftSide*>(pl);
-        if (ls)
-            m_plugins.append(qnoto::LeftSidePtr(ls));
+    for(qnoto::Plugin* pl: qnoto::plugins<qnoto::ToolPlugin>()){
+        if (auto* ls = qobject_cast<qnoto::ToolPlugin*>(pl))
+            m_plugins.append(ls);
     }
 }
 
-void LeftSideContainter::showPlugin(const QString & name)
+void ToolPlace::showPlugin(const QString & name)
 {
     if (m_stackIndex.contains(name)){
         m_stack->setCurrentIndex(m_stackIndex[name]);
     } else {
-        for(const qnoto::LeftSidePtr& plug: m_plugins){
+        for(const qnoto::ToolPlugin* plug: m_plugins){
             if (plug->name() != name)
                 continue;
-            m_stackIndex.insert(name, m_stack->addWidget(plug->create()));
+
+            m_stackIndex.insert(name, m_stack->addWidget(plug->create(this)));
             m_stack->setCurrentIndex(m_stackIndex[name]);
             break;
         }
     }
 }
 
-QString LeftSideContainter::selectedPlugin() const
+QString ToolPlace::selectedPlugin() const
 {
     return m_header->selectedPluginName();
 }

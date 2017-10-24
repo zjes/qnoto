@@ -34,6 +34,7 @@ bool Theme::load(const QString& file)
         st.italic        = style.value("italic").toBool();
         st.underline     = style.value("underline").toBool();
         st.strikeThrough = style.value("strike-through").toBool();
+        st.borderRadius  = style.value("border-radius").toInt();
 
         m_txtStyles.insert(key, qMove(st));
     }
@@ -49,6 +50,7 @@ bool Theme::load(const QString& file)
         st.italic        = style.value("italic").toBool();
         st.underline     = style.value("underline").toBool();
         st.strikeThrough = style.value("strike-through").toBool();
+        st.borderRadius  = style.value("border-radius").toString().toInt();
 
         m_txtStyleNums.insert(key, qMove(st));
     }
@@ -75,10 +77,11 @@ void Theme::format(QTextCharFormat& frm, const QString& name, const QString& sty
         frm.setFontItalic(style.italic);
         frm.setFontUnderline(style.underline);
         frm.setFontStrikeOut(style.strikeThrough);
+        frm.setProperty(QTextFormat::UserProperty+1, style.borderRadius);
+        //qDebug() << "rad" << style.borderRadius << frm.property(QTextFormat::UserProperty+1);
     };
 
     frm.setForeground(m_default.value("text-color"));
-    //frm.setBackground(m_default.value("background-color"));
 
     if (!style.isEmpty() && m_txtStyleNums.contains(style))
         doFormat(frm, m_txtStyleNums[style]);

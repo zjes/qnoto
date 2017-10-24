@@ -16,6 +16,12 @@ qnoto_add_plugin(${PROJECT_NAME}
         src/editors-find.ui
         src/history-navigate.h
         src/history-navigate.cpp
+        src/editors-state.h
+        src/editors-state.cpp
+        src/editors-actions.h
+        src/editors-actions.cpp
+        src/settings.h
+        src/settings.cpp
     LIBS
         Qt5::Core
         Qt5::Widgets

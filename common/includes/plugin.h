@@ -25,8 +25,8 @@ class COMMON_EXPORT Plugin: public QWidget
 public:
     Plugin();
     virtual ~Plugin();
-    virtual void saveState(QSettings& sets) const;
-    virtual void restoreState(QSettings& sets);
+    virtual bool saveState() const;
+    virtual void restoreState();
     virtual PreferencesPage* preferences() const;
     virtual QString name() const = 0;
     virtual QString title() const = 0;

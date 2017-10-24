@@ -32,6 +32,7 @@ public:
     void init();
     const syntax::ThemePtr& theme() const;
     void load(const QString& text);
+    QString text() const;
     const QString& fileName() const;
 public slots:
     void startFind(const QString& text);
@@ -43,6 +44,7 @@ protected:
     void resizeEvent(QResizeEvent*e ) override;
     void paintEvent(QPaintEvent *e) override;
     void keyPressEvent(QKeyEvent *event) override;
+    bool event(QEvent* ev) override;
 private:
     QString                              m_fileName;
     syntax::DefinitionPtr                m_definition;

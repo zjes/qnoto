@@ -38,9 +38,19 @@ void Rule::setBeginRegion(const QString& name)
     m_beginRegion = name;
 }
 
+const QString& Rule::beginRegion() const
+{
+    return m_beginRegion;
+}
+
 void Rule::setEndRegion(const QString& name)
 {
     m_endRegion = name;
+}
+
+const QString& Rule::endRegion() const
+{
+    return m_endRegion;
 }
 
 void Rule::setContext(const QString& cnt)

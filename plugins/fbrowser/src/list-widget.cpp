@@ -15,7 +15,7 @@ ListWidget::ListWidget(QWidget *parent) :
     connect(this, &ListWidget::activated, [this](const QModelIndex & index){
         QFileInfo file = qobject_cast<ListModel*>(model())->fileInfo(index);
         if (file.isFile())
-            emit qnoto::FileHandler::instance().activated(file.absoluteFilePath());
+            qnoto::FileHandler::instance().activate(file.absoluteFilePath());
     });
 
     this->header()->setVisible(false);

@@ -4,12 +4,12 @@
 class QSplitter;
 class QSettings;
 
-class LeftPanel: public QWidget
+class SideSplit: public QWidget
 {
     Q_OBJECT
 public:
-    ~LeftPanel();
-    explicit LeftPanel(QWidget* parent = nullptr);
+    SideSplit(QWidget* parent = nullptr);
+    ~SideSplit() override;
 
     void saveState(QSettings& sets) const;
     void restoreState(const QSettings& sets);

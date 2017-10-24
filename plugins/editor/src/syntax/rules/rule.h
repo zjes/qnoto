@@ -21,6 +21,8 @@ public:
 public:
     const QString& context() const;
     const QString& attribute() const;
+    const QString& beginRegion() const;
+    const QString& endRegion() const;
     bool lookAhead() const;
 public:
     virtual int match(const QString& text, int offset) = 0;

@@ -8,10 +8,10 @@ Plugin::Plugin()
 Plugin::~Plugin()
 {}
 
-void Plugin::saveState(QSettings& /*sets*/) const
-{}
+bool Plugin::saveState() const
+{ return true; }
 
-void Plugin::restoreState(QSettings& /*sets*/)
+void Plugin::restoreState()
 {}
 
 PreferencesPage* Plugin::preferences() const

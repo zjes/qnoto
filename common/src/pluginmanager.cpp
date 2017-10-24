@@ -13,7 +13,7 @@ class PluginManager::PluginManagerImpl: public QObject
 {
     Q_OBJECT
 public:
-    ~PluginManagerImpl()
+    ~PluginManagerImpl() override
     {}
 
     bool preloadPlugins()
@@ -22,8 +22,7 @@ public:
         QDir pluginsDir(QCoreApplication::applicationDirPath());
         pluginsDir.cd("plugins");
 
-        for(const QFileInfo& inf: pluginsDir.entryInfoList({"*.so", "*.dll"}))
-        {
+        for(const QFileInfo& inf: pluginsDir.entryInfoList({"*.so", "*.dll"})) {
             auto loader = QSharedPointer<QPluginLoader>::create(inf.absoluteFilePath());
             if (!loader->load()){
                 qWarning() << loader->errorString();

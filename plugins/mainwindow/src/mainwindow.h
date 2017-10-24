@@ -1,6 +1,7 @@
 #pragma once
 #include "includes/plugins/mainwindow.h"
-#include "window-impl.h"
+
+FORWARD(WindowImpl);
 
 class MainWindow: public qnoto::MainWindow
 {
@@ -14,11 +15,11 @@ public:
     QString title() const override;
 public:
     MainWindow();
-    ~MainWindow();
+    ~MainWindow() override;
 private:
     WindowImpl* window();
     void beforeClose();
 private:
-    QSharedPointer<WindowImpl> m_window;
+    WindowImplPtr m_window;
 };
 

@@ -5,8 +5,8 @@ class HistoryNavigate : public QListWidget
 {
     Q_OBJECT
 public:
-    explicit HistoryNavigate(const QStringList & history, QWidget *parent);
-    virtual ~HistoryNavigate();
+    HistoryNavigate(QWidget *parent);
+    ~HistoryNavigate() override;
 public:
     void next();
     void previous();

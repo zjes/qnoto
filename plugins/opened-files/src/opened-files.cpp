@@ -8,7 +8,8 @@ class ListWidget: public QListWidget
 {
     Q_OBJECT
 public:
-    ListWidget()
+    ListWidget(QWidget* parent):
+        QListWidget(parent)
     {
         qnoto::FileHandler& fh = qnoto::FileHandler::instance();
         connect(&fh, &qnoto::FileHandler::activated, this, &ListWidget::fileActivated);
@@ -19,15 +20,14 @@ public:
             fileActivated(file);
 
         connect(this, &ListWidget::itemClicked, [](QListWidgetItem* item){
-            qnoto::FileHandler::instance().activated(item->data(Qt::UserRole+1).toString());
+            qnoto::FileHandler::instance().activate(item->data(Qt::UserRole+1).toString());
         });
     }
 
 private:
     void fileActivated(const QString& file)
     {
-        auto*item = byFileName(file);
-        if (item){
+        if (auto*item = byFileName(file)){
             setCurrentItem(item);
         } else {
             QFileInfo info(file);
@@ -35,6 +35,7 @@ private:
             it->setData(Qt::UserRole+1, file);
             it->setData(Qt::UserRole+2, info.fileName());
             addItem(it);
+            setCurrentItem(it);
         }
     }
 
@@ -44,6 +45,7 @@ private:
         if (!item)
             return;
         removeItemWidget(item);
+        delete item;
     }
 
     void fileModified(const QString& file, bool modified)
@@ -75,9 +77,9 @@ QString OpenedFiles::title() const
     return tr("Open Files");
 }
 
-QWidget* OpenedFiles::create() const
+QWidget* OpenedFiles::create(QWidget* parent) const
 {
-    return new ListWidget;
+    return new ListWidget(parent);
 }
 
 #include "opened-files.moc"

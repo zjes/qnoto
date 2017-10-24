@@ -9,6 +9,7 @@
 #include "rules/rule.h"
 #include "item-data.h"
 #include "theme.h"
+#include "userdata.h"
 
 namespace syntax {
 
@@ -37,12 +38,6 @@ struct State
         }
         return contexts.top();
     }
-};
-
-struct UserData: public QTextBlockUserData
-{
-    QSharedPointer<State>  state;
-    std::map<int, QString> markFound;
 };
 
 Highlighting::Highlighting(QTextDocument* doc, const DefinitionPtr& def, bool markWhite):
@@ -87,7 +82,7 @@ void Highlighting::highlightBlock(TextBlock& block)
             data->state->contexts.push(m_definition->context());
         }
 
-        highlightLine(block, data->state);
+        highlightLine(block, data);
         UserData* nextData = dynamic_cast<UserData*>(block.block.next().userData());
         block.stateChanged = nextData && data->state->contexts.last() != nextData->state->contexts.first();
     }
@@ -114,21 +109,17 @@ void Highlighting::highlightBlock(TextBlock& block)
                 applyFormat(block, format, from, offset - from);
         }
     }
-
-    QTextCharFormat format;
-    if (fetchFormat("dsFoundMark", format)) {
-        UserData* data = dynamic_cast<UserData*>(block.block.userData());
-        if (data){
-            for (const auto& mark : data->markFound) {
-                applyFormat(block, format, mark.first, mark.second.length());
-            }
-        }
-    }
 }
 
-void Highlighting::highlightLine(TextBlock& block, const QSharedPointer<State>& state)
+int nextId()
 {
-    ContextPtr ctx = state->contexts.top();
+    static int id = 0;
+    return ++id;
+}
+
+void Highlighting::highlightLine(TextBlock& block, UserData* data)
+{
+    ContextPtr ctx = data->state->contexts.top();
 
     QString text = block.block.text();
     int offset = 0;
@@ -145,17 +136,53 @@ void Highlighting::highlightLine(TextBlock& block, const QSharedPointer<State>& 
             if (newOffset <= offset)
                 continue;
 
+            if (!rule->beginRegion().isEmpty()){
+                data->folding.offset = newOffset;
+                data->folding.type = Folding::Begin;
+                if (!data->folding.id)
+                    data->folding.id = nextId();
+            }
+
+            if (!rule->endRegion().isEmpty()){
+                if (data->folding){
+                    data->folding.type = Folding::None;
+                } else {
+                    data->folding.offset = newOffset;
+                    data->folding.type = Folding::End;
+
+                    int ocount = 1;
+                    for(QTextBlock blk = block.block.previous(); blk.isValid(); blk = blk.previous()){
+                        Folding* prev = folding(blk, true);
+                        if (!prev)
+                            continue;
+
+                        if (prev->type == Folding::End){
+                            ++ocount;
+                            continue;
+                        }
+
+                        if (prev->type == Folding::Begin){
+                            --ocount;
+                            if (!ocount){
+                                data->folding.id = prev->id;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
             QString nctx = rule->context();
             if(nctx.isEmpty())
                 continue;
 
             lookAhead = rule->lookAhead();
             if (lookAhead){
-                ctx = state->switchState(m_definition, nctx);
+                ctx = data->state->switchState(m_definition, nctx);
             } else {
                 if (rule->context() != "#stay"){
                     applyFormat(block, rule->attribute(), beginOffset, newOffset-beginOffset);
-                    ctx = state->switchState(m_definition, nctx);
+                    ctx = data->state->switchState(m_definition, nctx);
                 } else {
                     applyFormat(block, rule->attribute(), offset, newOffset-offset);
                 }
@@ -177,7 +204,7 @@ void Highlighting::highlightLine(TextBlock& block, const QSharedPointer<State>& 
     if (ctx){
         QString nctx = ctx->lineEndContext();
         if (!nctx.isEmpty())
-            ctx = state->switchState(m_definition, nctx);
+            ctx = data->state->switchState(m_definition, nctx);
     }
 }
 
@@ -236,15 +263,33 @@ void Highlighting::clearFound(QTextBlock& block)
 
 bool Highlighting::paintBlock(const QTextBlock& block, QPainter& painter, const QRect& bounding)
 {
-    UserData* data = dynamic_cast<UserData*>(block.userData());
+    UserData* data = syntax::userData(block);
     auto line = block.layout()->lineAt(0);
-    painter.setPen(QColor("#aeaeae"));
-    painter.setBrush(QColor("#dddd99"));
+
+    painter.setRenderHints(QPainter::Antialiasing|QPainter::SmoothPixmapTransform);
+
+    QTextCharFormat format;
+    fetchFormat("dsFoundMark", format);
+    painter.setPen(format.foreground().color());
+    painter.setBrush(format.background());
+    int radius = format.intProperty(QTextFormat::UserProperty+1);
+
     for (const auto& mark : data->markFound) {
         qreal left = line.cursorToX(mark.first);
         qreal right = line.cursorToX(mark.first+mark.second.length());
         QRectF pr = QRectF(bounding.left()+left, bounding.top(), right - left, bounding.height());
-        painter.drawRoundedRect(pr, 3, 3);
+        painter.drawRoundedRect(pr, radius, radius);
+    }
+
+    fetchFormat("dsNormal", format);
+    painter.setPen(format.foreground().color());
+    painter.setBrush(format.background());
+
+    if (data->folding.type == Folding::Begin && data->folding.closed){
+        qreal left = line.cursorToX(data->folding.offset);
+        QRectF pr = QRectF(bounding.left()+left, bounding.top(), 40, bounding.height());
+        painter.drawRoundedRect(pr, 4, 4);
+        painter.drawText(pr, Qt::AlignCenter, "...");
     }
     return true;
 }
@@ -252,9 +297,9 @@ bool Highlighting::paintBlock(const QTextBlock& block, QPainter& painter, const 
 bool Highlighting::hasUserData(const QTextBlock& block)
 {
     UserData* data = dynamic_cast<UserData*>(block.userData());
-    if (!data || data->markFound.empty())
-        return false;
-    return true;
+    if (data && (!data->markFound.empty() || (data->folding.offset && data->folding.closed)))
+        return true;
+    return false;
 }
 
 }

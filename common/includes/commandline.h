@@ -122,7 +122,7 @@ public:
     };
 
 public:
-    CommandLine(const QString& description, QList<CommandOption>&& options):
+    CommandLine(const QString& description, QList<CommandOption>&& options = {}):
         m_description(description),
         m_options(qMove(options))
     {}

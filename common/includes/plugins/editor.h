@@ -14,8 +14,10 @@ class COMMON_EXPORT EditorInstance: public QWidget
     Q_OBJECT
 public:
     virtual bool init(const QString& fileName) = 0;
-    virtual void populateMenu(qnoto::Editors* manager, QMenu* menu) = 0;
-
+    virtual bool isModified() const = 0;
+    virtual const QString& fileName() const = 0;
+    virtual bool save(const QString& newFileName = {}) = 0;
+    virtual const QList<QAction*>& actions() = 0;
 public:
     virtual void setSearch(const QString& text = {}) = 0;
     virtual QString selectedText() const = 0;

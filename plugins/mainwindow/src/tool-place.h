@@ -1,7 +1,8 @@
 #pragma once
 #include <QWidget>
 #include <QMap>
-#include "includes/plugins/leftside.h"
+
+#include "includes/plugins/tool-plugin.h"
 
 class QStackedWidget;
 class QComboBox;
@@ -10,8 +11,8 @@ class Header : public QWidget
 {
     Q_OBJECT
 public:
-    Header(const QList<qnoto::LeftSidePtr>& plugins, const QString& selected, QWidget* parent);
-    void addItem(qnoto::LeftSide* plugin);
+    Header(const QList<qnoto::ToolPlugin*>& plugins, const QString& selected, QWidget* parent);
+    void addItem(qnoto::ToolPlugin* plugin);
     QString selectedPluginName() const;
 
 signals:
@@ -22,11 +23,11 @@ private:
     QComboBox *m_box;
 };
 
-class LeftSideContainter : public QWidget
+class ToolPlace : public QWidget
 {
     Q_OBJECT
 public:
-    explicit LeftSideContainter(const QString& selected, QWidget *parent = 0);
+    explicit ToolPlace(const QString& selected, QWidget *parent = 0);
     QString selectedPlugin() const;
 signals:
     void addSplit(const QString& name);
@@ -37,6 +38,6 @@ private:
 private:
     QStackedWidget* m_stack;
     QMap<QString, int> m_stackIndex;
-    QList<qnoto::LeftSidePtr> m_plugins;
+    QList<qnoto::ToolPlugin*> m_plugins;
     Header* m_header;
 };

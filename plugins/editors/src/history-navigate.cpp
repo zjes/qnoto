@@ -3,14 +3,15 @@
 #include <QKeyEvent>
 #include <QFileInfo>
 #include "history-navigate.h"
+#include "includes/file-handler.h"
 
-HistoryNavigate::HistoryNavigate(const QStringList & history, QWidget *parent):
+HistoryNavigate::HistoryNavigate(QWidget *parent):
     QListWidget(parent)
 {
     setWindowFlags(Qt::Widget | Qt::Popup);
     setAttribute(Qt::WA_DeleteOnClose);
 
-    for(const QString& file: history){
+    for(const QString& file: qnoto::FileHandler::instance().openedFiles()){
         QFileInfo inf(file);
         QString name = inf.fileName();
         QListWidgetItem *it = new QListWidgetItem(name, this);

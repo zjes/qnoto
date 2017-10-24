@@ -4,6 +4,7 @@ cmake_policy(VERSION 3.5)
 include(GenerateExportHeader)
 
 qnoto_init(editor QT Core Widgets Concurrent Xml Test)
+include_directories(src)
 
 qnoto_add_plugin(${PROJECT_NAME}
     SOURCES
@@ -14,12 +15,14 @@ qnoto_add_plugin(${PROJECT_NAME}
         src/preferences.ui
         src/settings.h
         src/settings.cpp
-        src/editor-impl.h
-        src/editor-impl.cpp
-        src/editor-margin.h
-        src/editor-margin.cpp
-        src/editor-header.h
-        src/editor-header.cpp
+        src/parts/impl.h
+        src/parts/impl.cpp
+        src/parts/margin.h
+        src/parts/margin.cpp
+        src/parts/header.h
+        src/parts/header.cpp
+        src/parts/scroll.h
+        src/parts/scroll.cpp
 
         src/syntax/common.h
         src/syntax/manager.h

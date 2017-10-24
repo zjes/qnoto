@@ -17,7 +17,6 @@ Preferences::~Preferences()
 
 bool Preferences::save()
 {
-
     return true;
 }
 

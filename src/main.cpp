@@ -9,8 +9,7 @@ int main(int argc, char** argv)
 {
     QApplication app(argc, argv);
 
-    qnoto::CommandLine line("qnoto editor", {
-    });
+    qnoto::CommandLine line("qnoto editor");
 
     if (!line.parse(argc, argv)){
         qWarning() << qPrintable(line.usage());
@@ -25,6 +24,7 @@ int main(int argc, char** argv)
 
     if (line.positionalArgs().size())
         main->openFiles(line.positionalArgs());
+
     main->show();
     return app.exec();
 }

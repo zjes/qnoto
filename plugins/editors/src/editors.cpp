@@ -1,48 +1,45 @@
 #include <QDebug>
-#include <QAction>
 #include <QVBoxLayout>
-#include <QSettings>
-#include <QMenuBar>
+#include <QFileInfo>
+#include <QMessageBox>
 #include "editors.h"
 #include "editors-factory.h"
 #include "editors-find.h"
 #include "history-navigate.h"
+#include "settings.h"
 
 #include "includes/file-handler.h"
 #include "includes/ui-utils.h"
 
+//--------------------------------------------------------------------------------------------------
 
 Editors::Editors():
     m_widget(new QStackedWidget),
-    m_find(new EditorsFind)
+    m_find(new EditorsFind),
+    m_state(this),
+    m_actions(this)
 {
     qnoto::setLayout<QVBoxLayout>(this, m_widget, m_find);
 
-    QAction *a = new QAction(this);
-    a->setShortcut(Qt::ControlModifier + Qt::Key_Tab);
-    connect(a, &QAction::triggered, this, &Editors::historyNavigate);
-    addAction(a);
-
-    qnoto::FileHandler& fh = qnoto::FileHandler::instance();
-    connect(&fh, &qnoto::FileHandler::activated, this, &Editors::openFile);
+    addAction(qnoto::Action<Editors>(this, "history-next").
+        shortcut(Qt::ControlModifier + Qt::Key_Tab).
+        action(&Editors::historyNavigate));
 }
+
+//--------------------------------------------------------------------------------------------------
 
 Editors::~Editors()
 {
 }
 
+//--------------------------------------------------------------------------------------------------
+
 void Editors::openFile(const QString& file)
 {
-    static bool block = false;
-    if (block)
-        return;
+    QMutexLocker locker(&m_mutex);
 
-    block = true;
-    m_stack.removeAll(file);
-    m_stack.prepend(file);
     if (m_editors.contains(file)){
         m_widget->setCurrentIndex(m_editors[file].index);
-        qnoto::FileHandler::instance().activated(file);
     } else {
         auto* ed = EditorsFactory::create(file);
         connect(ed, &qnoto::EditorInstance::escape, this, &Editors::escape);
@@ -50,19 +47,55 @@ void Editors::openFile(const QString& file)
             int index = m_widget->addWidget(ed);
             m_editors.insert(file, {ed, index});
             m_widget->setCurrentIndex(index);
-            qnoto::FileHandler::instance().activated(file);
         }
     }
+
+    m_current = file;
     m_find->setEditor(m_editors[file].editor);
-    m_editors[file].editor->populateMenu(this, m_menuEdit);
     m_editors[file].editor->setFocus();
-    block = false;
+
+    for(QAction* act : actions("File_save", "File_saveAs", "File_close", "File_closeAllExcept")){
+        act->setText(act->property("orig-text").toString().arg(QFileInfo(file).fileName()));
+    }
+
+    emit updateEditMenu(m_editors[file].editor->actions());
+    emit openedChanged();
 }
+
+//--------------------------------------------------------------------------------------------------
+
+void Editors::closeFile(const QString& fileName)
+{
+    QMutexLocker locker(&m_mutex);
+
+    if (!m_editors.contains(fileName))
+        return;
+
+    auto* wid = m_widget->widget(m_editors[fileName].index);
+    m_widget->removeWidget(wid);
+    m_editors.remove(fileName);
+    wid->deleteLater();
+
+    for(int i = 0; i < m_widget->count(); ++i){
+        auto* iwid = qobject_cast<qnoto::EditorInstance*>(m_widget->widget(i));
+        if (!iwid){
+            qWarning() << "wrong wifget type";
+            continue;
+        }
+        m_editors[iwid->fileName()].index = i;
+    }
+
+    emit openedChanged();
+}
+
+//--------------------------------------------------------------------------------------------------
 
 void Editors::showFind()
 {
     m_find->activate();
 }
+
+//--------------------------------------------------------------------------------------------------
 
 void Editors::escape()
 {
@@ -70,59 +103,82 @@ void Editors::escape()
         m_find->hide();
 }
 
+//--------------------------------------------------------------------------------------------------
+
 void Editors::historyNavigate()
 {
     if (m_historyNavi) {
         m_historyNavi->next();
     } else {
-        m_historyNavi = new HistoryNavigate(m_stack, m_widget);
+        m_historyNavi = new HistoryNavigate(m_widget);
         connect(m_historyNavi, &HistoryNavigate::closed, this, &Editors::delNavigator);
     }
 }
 
+//--------------------------------------------------------------------------------------------------
+
 void Editors::delNavigator(const QString& fileName)
 {
-    openFile(fileName);
+    qnoto::FileHandler::instance().activate(fileName);
     m_historyNavi->deleteLater();
     m_historyNavi = nullptr;
 }
 
-void Editors::saveState(QSettings& sets) const
-{
-    const auto& files = qnoto::FileHandler::instance().openedFiles();
+//--------------------------------------------------------------------------------------------------
 
-    sets.beginWriteArray("OpenedFiles");
-    int count = 0;
-    for(const QString& file: files){
-        sets.setArrayIndex(count++);
-        sets.setValue("file", file);
+bool Editors::saveState() const
+{
+    if (m_actions.canClose()){
+        if (Settings::restoreState())
+            Settings::setOpenedFiles(qnoto::FileHandler::instance().openedFiles());
+        return true;
     }
-    sets.endArray();
-    qnoto::FileHandler::instance();
+    return false;
 }
 
-void Editors::restoreState(QSettings& sets)
+//--------------------------------------------------------------------------------------------------
+
+void Editors::restoreState()
 {
-    int size = sets.beginReadArray("OpenedFiles");
-    for(int i = 0; i < size; ++i){
-        sets.setArrayIndex(i);
-        openFile(sets.value("file").toString());
+    if (Settings::restoreState()){
+        for(const auto& fname: Settings::openedFiles())
+            qnoto::FileHandler::instance().activate(fname);
     }
-    sets.endArray();
 }
+
+//--------------------------------------------------------------------------------------------------
 
 QString Editors::name() const
 {
     return "editors";
 }
 
+//--------------------------------------------------------------------------------------------------
+
 QString Editors::title() const
 {
     return tr("Editors");
 }
 
-void Editors::setMenu(QMenu* edit)
+//--------------------------------------------------------------------------------------------------
+
+const Editors::MenuList& Editors::actions() const
 {
-    m_menuEdit = edit;
+    return m_actions.actions();
 }
 
+//--------------------------------------------------------------------------------------------------
+
+qnoto::EditorInstance* Editors::currentEditor() const
+{
+    return m_editors[m_current].editor;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+const QMap<QString, EditorInfo>& Editors::editors() const
+{
+    return m_editors;
+}
+
+//--------------------------------------------------------------------------------------------------

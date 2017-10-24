@@ -1,18 +1,18 @@
 #pragma once
-#include "includes/plugins/leftside.h"
+#include "includes/plugins/tool-plugin.h"
 
 class ListWidget;
 
-class FileBrowser: public qnoto::LeftSide
+class FileBrowser: public qnoto::ToolPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "qNoto.LeftSide.FileBrowser")
-    Q_INTERFACES(qnoto::LeftSide)
+    Q_PLUGIN_METADATA(IID "qNoto.ToolPlugin.FileBrowser")
+    Q_INTERFACES(qnoto::ToolPlugin)
 public:
     FileBrowser();
 public:
     QString name() const override;
     QString title() const override;
-    QWidget* create() const override;
+    QWidget* create(QWidget* parent) const override;
 };
 

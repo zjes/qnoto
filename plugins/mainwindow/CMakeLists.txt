@@ -19,10 +19,10 @@ qnoto_add_plugin(${PROJECT_NAME}
         src/window-impl.ui
         src/window-impl.h
         src/window-impl.cpp
-        src/left-panel.h
-        src/left-panel.cpp
-        src/left-side-containter.h
-        src/left-side-containter.cpp
+        src/side-split.h
+        src/side-split.cpp
+        src/tool-place.h
+        src/tool-place.cpp
         src/qnoto-style.h
         src/qnoto-style.cpp
         src/resources.qrc

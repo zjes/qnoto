@@ -1,6 +1,7 @@
 #include <QDebug>
 #include <QResource>
 #include "mainwindow.h"
+#include "window-impl.h"
 
 MainWindow::MainWindow()
 {
@@ -18,9 +19,7 @@ MainWindow::~MainWindow()
 WindowImpl* MainWindow::window()
 {
     if (!m_window){
-        m_window = QSharedPointer<WindowImpl>(new WindowImpl, [](WindowImpl* w){
-            w->deleteLater();
-        });
+        m_window = WindowImplPtr::create();
         connect(m_window.data(), &WindowImpl::beforeClose, this, &MainWindow::beforeClose);
     }
     return m_window.data();

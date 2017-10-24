@@ -8,7 +8,7 @@ class QTextDocument;
 namespace syntax {
 
 FORWARD(Theme)
-struct State;
+struct UserData;
 
 class Highlighting: public SyntaxHighlighter
 {
@@ -22,7 +22,7 @@ public:
     bool paintBlock(const QTextBlock& block, QPainter& painter, const QRect& bounding);
 protected:
     void highlightBlock(TextBlock &block) override;
-    void highlightLine(TextBlock& block, const QSharedPointer<State>& state);
+    void highlightLine(TextBlock& block, UserData* data);
     bool fetchFormat(const QString& frm, QTextCharFormat& format);
     void applyFormat(TextBlock& block, const QString& format, int from, int to);
     void applyFormat(TextBlock& block, const QTextCharFormat& format, int from, int length);

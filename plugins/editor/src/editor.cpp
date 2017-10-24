@@ -3,12 +3,18 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QAction>
+#include <QStandardPaths>
+#include <QFileDialog>
 #include "editor.h"
 #include "syntax/manager.h"
 #include "includes/ui-utils.h"
-#include "editor-impl.h"
-#include "editor-header.h"
+#include "parts/impl.h"
+#include "parts/header.h"
 #include "preferences.h"
+
+EditorInstance::EditorInstance()
+{
+}
 
 EditorInstance::~EditorInstance()
 {
@@ -16,18 +22,13 @@ EditorInstance::~EditorInstance()
 
 bool EditorInstance::init(const QString& fileName)
 {
+    m_fileName = fileName;
     QFile f(fileName);
-
-    if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
-        return false;
-
-    uchar* filedata = f.map(0, f.size());
 
     m_widget.reset(new EditorImpl(fileName, syntax::Manager::instance().definition(fileName)));
     m_header.reset(new EditorHeader(m_widget.data()));
 
     m_widget->init();
-    m_widget->load(reinterpret_cast<char*>(filedata));
     connect(m_widget.data(), &EditorImpl::escape, this, &EditorInstance::escape);
 
     qnoto::setLayout<QVBoxLayout>(this,
@@ -35,8 +36,23 @@ bool EditorInstance::init(const QString& fileName)
         m_widget.data()
     );
 
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
+        return false;
+
+    uchar* filedata = f.map(0, f.size());
+    m_widget->load(reinterpret_cast<char*>(filedata));
+
     f.unmap(filedata);
     f.close();
+
+    m_actions = {
+        qnoto::Action<EditorImpl>(m_widget.data(), "Edit_undo").
+            icon("undo").
+            shortcut(QKeySequence::Undo).
+            title(tr("Undo")).
+            action(&EditorImpl::undo)
+    };
+
     return true;
 }
 
@@ -45,7 +61,7 @@ void EditorInstance::focusInEvent(QFocusEvent *)
     m_widget->setFocus();
 }
 
-void EditorInstance::populateMenu(qnoto::Editors* manager, QMenu* menu)
+/*void EditorInstance::populateMenu(qnoto::Editors* manager, QMenu* menu)
 {
     if (!m_editMenu){
         m_editMenu.reset(new QMenu);
@@ -127,7 +143,7 @@ void EditorInstance::populateMenu(qnoto::Editors* manager, QMenu* menu)
     for(QAction* act: m_editMenu->actions()){
         menu->addAction(act);
     }
-}
+}*/
 
 void EditorInstance::setSearch(const QString& text)
 {
@@ -148,6 +164,38 @@ void EditorInstance::escape()
 {
     emit qnoto::EditorInstance::escape();
     m_widget->setFocus();
+}
+
+bool EditorInstance::isModified() const
+{
+    return m_widget->document()->isModified() || m_fileName.isEmpty();
+}
+
+const QString& EditorInstance::fileName() const
+{
+    return m_fileName;
+}
+
+bool EditorInstance::save(const QString& newFileName)
+{
+    if (!newFileName.isEmpty())
+        m_fileName = newFileName;
+
+    QFile f(m_fileName);
+
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Text))
+        return false;
+
+    f.write(m_widget->text().toUtf8());
+    f.close();
+
+    m_widget->document()->setModified(false);
+    return true;
+}
+
+const QList<QAction*>& EditorInstance::actions()
+{
+    return m_actions;
 }
 
 //--------------------------------------------------------------------------------------------------
