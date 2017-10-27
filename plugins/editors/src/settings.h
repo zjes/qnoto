@@ -1,12 +1,10 @@
 #pragma once
 #include <QStringList>
 #include <QScopedPointer>
+#include "includes/settings.h"
 
-class QSettings;
-class Settings
+class Settings: public qnoto::Settings
 {
-public:
-    ~Settings();
 public:
     static QStringList openedFiles();
     static void setOpenedFiles(const QStringList& list);
@@ -14,9 +12,9 @@ public:
     static void setRestoreState(bool restore);
     static QString lastDir();
     static void setLastDir(const QString& last);
+    static void addToRecent(const QString& file);
+    static QStringList recentFiles();
 private:
     static Settings& instance();
     Settings();
-private:
-    QScopedPointer<QSettings> m_setts;
 };

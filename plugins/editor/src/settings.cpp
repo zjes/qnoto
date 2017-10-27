@@ -6,7 +6,14 @@
 #include "settings.h"
 
 Settings::Settings():
-    m_setts(new QSettings(QSettings::IniFormat, QSettings::UserScope, "qnoto", "qnoto"))
+    qnoto::Settings("editor"),
+    wordWrap(*this,         "editor/wordwrap",          false),
+    theme(*this,            "editor/theme",             QCoreApplication::applicationDirPath()+"/themes/breeze-dark.theme"),
+    showLineNumbers(*this,  "editor/show-linenumbers",  true),
+    showWhite(*this,        "editor/show-white",        true),
+    showEndl(*this,         "editor/show-endl",         false),
+    antialiasedFont(*this,  "editor/antialiased-font",  true),
+    hightlightLine(*this,   "editor/hightlight-line",   false)
 {}
 
 Settings& Settings::instance()
@@ -15,54 +22,29 @@ Settings& Settings::instance()
     return sets;
 }
 
-Settings::~Settings()
-{}
-
 QFont Settings::font()
 {
     QFont font;
-    font.setBold(instance().m_setts->value("editor/font-bold", false).toBool());
-    font.setItalic(instance().m_setts->value("editor/font-italic", false).toBool());
-    if (instance().m_setts->value("editor/font-family").isNull()){
+    font.setBold(value("editor/font-bold", false));
+    font.setItalic(value("editor/font-italic", false));
+
+    if (value("editor/font-family").isNull()){
         QFont sys = QFontDatabase::systemFont(QFontDatabase::FixedFont);
         font.setFamily(sys.family());
         font.setPointSize(sys.pointSize());
     } else {
-        font.setFamily(instance().m_setts->value("editor/font-family").toString());
-        font.setPointSize(instance().m_setts->value("editor/font-size", 11).toInt());
+        font.setFamily(value("editor/font-family"));
+        font.setPointSize(value("editor/font-size", 11));
     }
+
+    font.setStyleStrategy(antialiasedFont ? QFont::PreferAntialias : QFont::NoAntialias);
     return font;
 }
 
 void Settings::setFont(const QFont& font)
 {
-    instance().m_setts->setValue("editor/font-bold", font.bold());
-    instance().m_setts->setValue("editor/font-italic", font.italic());
-    instance().m_setts->setValue("editor/font-family", font.family());
-    instance().m_setts->setValue("editor/font-size", font.pointSize());
-}
-
-bool Settings::wordWrap()
-{
-    return instance().m_setts->value("editor/wordwrap", false).toBool();
-}
-
-QString Settings::theme()
-{
-    return instance().m_setts->value("editor/theme", QCoreApplication::applicationDirPath()+"/themes/breeze-dark.theme").toString();
-}
-
-bool Settings::showLineNumbers()
-{
-    return instance().m_setts->value("editor/show-linenumbers", true).toBool();
-}
-
-bool Settings::showWhite()
-{
-    return instance().m_setts->value("editor/show-white", true).toBool();
-}
-
-bool Settings::showEndl()
-{
-    return instance().m_setts->value("editor/show-endl", false).toBool();
+    instance().setValue("editor/font-bold", font.bold());
+    instance().setValue("editor/font-italic", font.italic());
+    instance().setValue("editor/font-family", font.family());
+    instance().setValue("editor/font-size", font.pointSize());
 }

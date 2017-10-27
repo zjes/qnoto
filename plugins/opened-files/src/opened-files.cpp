@@ -16,9 +16,6 @@ public:
         connect(&fh, &qnoto::FileHandler::closed, this, &ListWidget::fileClosed);
         connect(&fh, &qnoto::FileHandler::modified, this, &ListWidget::fileModified);
 
-        for(const QString& file: fh.openedFiles())
-            fileActivated(file);
-
         connect(this, &ListWidget::itemClicked, [](QListWidgetItem* item){
             qnoto::FileHandler::instance().activate(item->data(Qt::UserRole+1).toString());
         });

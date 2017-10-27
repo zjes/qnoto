@@ -1,5 +1,6 @@
 #include <QTest>
 #include <QDebug>
+#include <QStringList>
 #include "src/syntax/rules/anychar.h"
 #include "src/syntax/rules/detectspaces.h"
 #include "src/syntax/rules/float.h"
@@ -7,6 +8,7 @@
 #include "src/syntax/rules/hlchex.h"
 #include "src/syntax/rules/detectidentifier.h"
 #include "src/syntax/rules/regexpr.h"
+#include "src/settings.h"
 
 class RulesTest: public QObject
 {

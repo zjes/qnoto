@@ -25,6 +25,7 @@ protected:
     void focusInEvent(QFocusEvent *) override;
 private:
     void escape();
+    QAction* action(const QString& name) const;
 private:
     QString                      m_fileName;
     QScopedPointer<EditorImpl>   m_widget;

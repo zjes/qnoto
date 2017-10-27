@@ -2,8 +2,10 @@
 #include <QList>
 #include <QAction>
 #include "includes/plugins/editors.h"
+#include "switcher.h"
 
 class Editors;
+
 class EditorsActions: public QObject
 {
     Q_OBJECT
@@ -12,6 +14,8 @@ public:
 public:
     const qnoto::Editors::MenuList& actions() const;
     bool canClose() const;
+    void refreshRecent();
+
 public:
     template<typename... T>
     qnoto::Editors::MenuList actions(const T&... names) const
@@ -52,4 +56,5 @@ private:
 private:
     qnoto::Editors::MenuList m_actions;
     Editors* m_eds;
+    Switcher m_switcher;
 };

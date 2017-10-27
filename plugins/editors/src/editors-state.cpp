@@ -53,4 +53,6 @@ void EditorsState::openedChanged()
 {
     for(auto& it: m_eds->actions("File_close", "File_closeAll", "File_closeAllExcept", "File_saveAs"))
         it->setEnabled(m_eds->editors().size() > 0);
+    for(auto& it: m_eds->actions("Window_next", "Window_prev"))
+        it->setEnabled(m_eds->editors().size() > 1);
 }

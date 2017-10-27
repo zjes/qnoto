@@ -25,6 +25,7 @@ void SideSplit::addSplit(const QString& item)
     connect(cont, &ToolPlace::closeSplit, this, &SideSplit::closeSplit);
 
     m_splitter->addWidget(cont);
+    cont->restoreState();
 }
 
 void SideSplit::closeSplit()

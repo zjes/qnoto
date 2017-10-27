@@ -25,6 +25,7 @@ public:
 
 signals:
     void escape();
+    void showFind();
 };
 
 class COMMON_EXPORT Editor: public Plugin

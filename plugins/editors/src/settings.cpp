@@ -2,7 +2,7 @@
 #include "settings.h"
 
 Settings::Settings():
-    m_setts(new QSettings(QSettings::IniFormat, QSettings::UserScope, "qnoto", "editors"))
+    qnoto::Settings("editors")
 {}
 
 Settings& Settings::instance()
@@ -11,51 +11,46 @@ Settings& Settings::instance()
     return sets;
 }
 
-Settings::~Settings()
-{}
-
 QStringList Settings::openedFiles()
 {
-    QStringList ret;
-    int size = instance().m_setts->beginReadArray("OpenedFiles");
-    for(int i = size-1; i >= 0; --i){
-        instance().m_setts->setArrayIndex(i);
-
-        ret.append(instance().m_setts->value("file").toString());
-    }
-    instance().m_setts->endArray();
-    return ret;
+    return instance().value<QStringList>("opened-files");
 }
 
 void Settings::setOpenedFiles(const QStringList& list)
 {
-    instance().m_setts->beginWriteArray("OpenedFiles");
-    int count = 0;
-    for(const QString& file: list){
-        instance().m_setts->setArrayIndex(count++);
-        instance().m_setts->setValue("file", file);
-    }
-    instance().m_setts->endArray();
+    instance().setValue("opened-files", list);
 }
 
 bool Settings::restoreState()
 {
-    return instance().m_setts->value("restoreState", true).toBool();
+    return instance().value("restoreState", true);
 }
 
 void Settings::setRestoreState(bool restore)
 {
-    instance().m_setts->setValue("restoreState", restore);
+    instance().setValue("restoreState", restore);
 }
 
 QString Settings::lastDir()
 {
-    return instance().m_setts->value("lastDir").toString();
+    return instance().value("lastDir");
 }
 
 void Settings::setLastDir(const QString& last)
 {
-    instance().m_setts->setValue("lastDir", last);
+    instance().setValue("lastDir", last);
 }
 
+void Settings::addToRecent(const QString& file)
+{
+    QStringList recents = recentFiles();
+    recents.removeAll(file);
+    recents.prepend(file);
 
+    instance().setValue("recent-files", recents);
+}
+
+QStringList Settings::recentFiles()
+{
+    return instance().value<QStringList>("recent-files");
+}

@@ -30,6 +30,7 @@ bool EditorInstance::init(const QString& fileName)
 
     m_widget->init();
     connect(m_widget.data(), &EditorImpl::escape, this, &EditorInstance::escape);
+    connect(m_widget.data(), &EditorImpl::showFind, this, &EditorInstance::showFind);
 
     qnoto::setLayout<QVBoxLayout>(this,
         m_header.data(),
@@ -45,14 +46,86 @@ bool EditorInstance::init(const QString& fileName)
     f.unmap(filedata);
     f.close();
 
-    m_actions = {
-        qnoto::Action<EditorImpl>(m_widget.data(), "Edit_undo").
-            icon("undo").
-            shortcut(QKeySequence::Undo).
-            title(tr("Undo")).
-            action(&EditorImpl::undo)
+    auto addAction = [this](const QString& name){
+        return qnoto::Action<EditorImpl>(m_widget.data(), name);
     };
 
+    auto separator = [this](const QString& name){
+        QAction* act = new QAction(this);
+        act->setSeparator(true);
+        act->setProperty("name", name+"_");
+        return act;
+    };
+
+    m_actions = {
+        addAction("Edit_undo").
+            icon("edit-undo").
+            shortcut(QKeySequence::Undo).
+            title(tr("Undo")).
+            action(&EditorImpl::undo).
+            enabled(m_widget->document()->isUndoAvailable()),
+        addAction("Edit_redo").
+            icon("edit-redo").
+            shortcut(QKeySequence::Redo).
+            title(tr("Redo")).
+            action(&EditorImpl::redo).
+            enabled(m_widget->document()->isRedoAvailable()),
+
+        separator("Edit_"),
+
+        addAction("Edit_cut").
+            icon("edit-cut").
+            shortcut(QKeySequence::Cut).
+            title(tr("Cut")).
+            action(&EditorImpl::cut).
+            enabled(!m_widget->textCursor().selectedText().isEmpty()),
+        addAction("Edit_copy").
+            icon("edit-copy").
+            shortcut(QKeySequence::Copy).
+            title(tr("Copy")).
+            action(&EditorImpl::copy).
+            enabled(!m_widget->textCursor().selectedText().isEmpty()),
+        addAction("Edit_paste").
+            icon("edit-paste").
+            shortcut(QKeySequence::Paste).
+            title(tr("Paste")).
+            action(&EditorImpl::paste).
+            enabled(m_widget->canPaste()),
+
+        separator("Edit_"),
+
+        addAction("Edit_find").
+            icon("edit-find").
+            shortcut(QKeySequence::Find).
+            title(tr("Find && replace")).
+            action(&EditorImpl::showFind),
+
+        addAction("Edit_findNext").
+            icon("edit-findnext").
+            shortcut(QKeySequence::FindNext).
+            title(tr("Find next")).
+            action(&EditorImpl::doFind).
+            enabled(false),
+
+        addAction("Edit_findPrev").
+            icon("edit-findprev").
+            shortcut(QKeySequence::FindPrevious).
+            title(tr("Find previous")).
+            action(&EditorImpl::doFind).
+            enabled(false),
+    };
+
+    connect(m_widget->document(), &QTextDocument::undoAvailable, action("Edit_undo"), &QAction::setEnabled);
+    connect(m_widget->document(), &QTextDocument::redoAvailable, action("Edit_redo"), &QAction::setEnabled);
+    connect(m_widget.data(), &EditorImpl::copyAvailable, action("Edit_copy"), &QAction::setEnabled);
+    connect(m_widget.data(), &EditorImpl::copyAvailable, action("Edit_cut"), &QAction::setEnabled);
+    connect(m_widget.data(), &EditorImpl::findAvail, action("Edit_findNext"), &QAction::setEnabled);
+    connect(m_widget.data(), &EditorImpl::findAvail, action("Edit_findPrev"), &QAction::setEnabled);
+
+    const QClipboard *clipboard = QApplication::clipboard();
+    connect(clipboard, &QClipboard::dataChanged, [this, clipboard](){
+        action("Edit_paste")->setEnabled(!clipboard->text().isEmpty());
+    });
     return true;
 }
 
@@ -61,89 +134,14 @@ void EditorInstance::focusInEvent(QFocusEvent *)
     m_widget->setFocus();
 }
 
-/*void EditorInstance::populateMenu(qnoto::Editors* manager, QMenu* menu)
+QAction* EditorInstance::action(const QString& name) const
 {
-    if (!m_editMenu){
-        m_editMenu.reset(new QMenu);
-        QAction* undoAct = m_editMenu->addAction(
-            qnoto::icon("edit-undo"),
-            tr("Undo"),
-            m_widget.data(), &EditorImpl::undo,
-            QKeySequence::Undo
-        );
-        undoAct->setEnabled(m_widget->document()->isUndoAvailable());
-        connect(m_widget.data(), &EditorImpl::undoAvailable, undoAct, &QAction::setEnabled);
-
-        QAction* redoAct = m_editMenu->addAction(
-            qnoto::icon("edit-redo"),
-            tr("Redo"),
-            m_widget.data(), &EditorImpl::redo,
-            QKeySequence::Redo
-        );
-        redoAct->setEnabled(m_widget->document()->isRedoAvailable());
-        connect(m_widget.data(), &EditorImpl::redoAvailable, redoAct, &QAction::setEnabled);
-
-        m_editMenu->addSeparator();
-
-        QAction* cutAct = m_editMenu->addAction(
-            qnoto::icon("edit-cut"),
-            tr("Cut"),
-            m_widget.data(), &EditorImpl::cut,
-            QKeySequence::Cut
-        );
-        cutAct->setEnabled(!m_widget->textCursor().selectedText().isEmpty());
-        connect(m_widget.data(), &EditorImpl::copyAvailable, cutAct, &QAction::setEnabled);
-
-        QAction* copyAct = m_editMenu->addAction(
-            qnoto::icon("edit-copy"),
-            tr("Copy"),
-            m_widget.data(), &EditorImpl::copy,
-            QKeySequence::Copy
-        );
-        copyAct->setEnabled(!m_widget->textCursor().selectedText().isEmpty());
-        connect(m_widget.data(), &EditorImpl::copyAvailable, copyAct, &QAction::setEnabled);
-
-        QAction* pasteAct = m_editMenu->addAction(
-            qnoto::icon("edit-paste"),
-            tr("Paste"),
-            m_widget.data(), &EditorImpl::paste,
-            QKeySequence::Paste
-        );
-        pasteAct->setEnabled(m_widget->canPaste());
-        const QClipboard *clipboard = QApplication::clipboard();
-        connect(clipboard, &QClipboard::dataChanged, [pasteAct, clipboard](){
-            pasteAct->setEnabled(!clipboard->text().isEmpty());
-        });
-
-        m_editMenu->addSeparator();
-
-        m_editMenu->addAction(
-            qnoto::icon("edit-find"),
-            tr("Find"),
-            manager, &qnoto::Editors::showFind,
-            QKeySequence::Find
-        );
-
-        m_editMenu->addAction(
-            qnoto::icon("edit-find-next"),
-            tr("Find next"),
-            m_widget.data(), &EditorImpl::doFind,
-            QKeySequence::FindNext
-        );
-
-        m_editMenu->addAction(
-            qnoto::icon("edit-find-previous"),
-            tr("Find previous"),
-            m_widget.data(), &EditorImpl::doFind,
-            QKeySequence::FindPrevious
-        );
+    for(const auto& it: m_actions){
+        if (it->property("name").toString() == name)
+            return it;
     }
-
-    menu->clear();
-    for(QAction* act: m_editMenu->actions()){
-        menu->addAction(act);
-    }
-}*/
+    return nullptr;
+}
 
 void EditorInstance::setSearch(const QString& text)
 {

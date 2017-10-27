@@ -1,6 +1,8 @@
+#include <QDebug>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QStandardPaths>
+#include <QMenu>
 #include "editors-actions.h"
 #include "includes/ui-utils.h"
 #include "includes/file-handler.h"
@@ -9,7 +11,8 @@
 #include "settings.h"
 
 EditorsActions::EditorsActions(Editors* eds):
-    m_eds(eds)
+    m_eds(eds),
+    m_switcher(eds)
 {
     auto action = [this](const QString& name){
         return qnoto::Action<EditorsActions>(this, name);
@@ -34,6 +37,9 @@ EditorsActions::EditorsActions(Editors* eds):
             icon("file-open").
             shortcut(QKeySequence::Open).
             action(&EditorsActions::openFileSlot),
+
+        action("File_recent").
+            title(tr("Recent Files")),
 
         separator("File"),
 
@@ -75,8 +81,31 @@ EditorsActions::EditorsActions(Editors* eds):
             title(tr("Save All")).
             icon("file-saveall").
             action(&EditorsActions::saveAllSlot).
-            enabled(false)
+            enabled(false),
+
+        action("Window_prev").
+            title(tr("Previous open document in history")).
+            icon("window-prev").
+            //action(&EditorsActions::prevWindowSlot).
+            shortcut(Qt::ControlModifier + Qt::Key_Tab).
+            enabled(false),
+
+        action("Window_next").
+            title(tr("Next open document in history")).
+            icon("window-next").
+            //action(&EditorsActions::nextWindowSlot).
+            shortcut(Qt::ControlModifier + Qt::ShiftModifier + Qt::Key_Tab).
+            enabled(false),
     };
+
+    m_switcher.setForwardAction(actions("Window_prev")[0]);
+    m_switcher.setBackwardAction(actions("Window_next")[0]);
+
+    QMenu* recent = new QMenu(m_eds);
+    QAction* act = actions("File_recent")[0];
+    act->setMenu(recent);
+
+    refreshRecent();
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -266,3 +295,20 @@ bool EditorsActions::canClose() const
 }
 
 //--------------------------------------------------------------------------------------------------
+
+void EditorsActions::refreshRecent()
+{
+    QAction* act = actions("File_recent")[0];
+    QMenu* recent = act->menu();
+    recent->clear();
+    for(const QString& file: Settings::recentFiles()){
+        recent->addAction(
+            qnoto::Action<QAction>(act, "File_recent").
+                title(QFileInfo(file).fileName()).
+                action([this, file](){
+                    qnoto::FileHandler::instance().activate(file);
+                })
+        );
+    }
+}
+

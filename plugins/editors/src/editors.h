@@ -9,7 +9,6 @@
 #include "editors-state.h"
 #include "editors-actions.h"
 
-class HistoryNavigate;
 class EditorsFind;
 
 struct EditorInfo
@@ -32,7 +31,6 @@ public:
     void openFile(const QString& file) override;
     void closeFile(const QString& fileName) override;
     const MenuList& actions() const override;
-    void showFind() override;
 
 public:
     QString name() const override;
@@ -52,14 +50,12 @@ signals:
     void openedChanged();
 
 private:
-    void historyNavigate();
-    void delNavigator(const QString& fileName);
     void escape();
+    void showFind();
 
 private:
     QMutex                          m_mutex;
     QStackedWidget*                 m_widget = nullptr;
-    HistoryNavigate*                m_historyNavi = nullptr;
     QMap<QString, EditorInfo>       m_editors;
     EditorsFind*                    m_find = nullptr;
     QString                         m_current;

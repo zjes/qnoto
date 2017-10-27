@@ -117,6 +117,9 @@ qnoto_add_executable(${PROJECT_NAME}-test
         src/syntax/rules/regexpr.h
         src/syntax/rules/regexpr.cpp
 
+        src/settings.h
+        src/settings.cpp
+
     LIBS
         Qt5::Core
         Qt5::Test

@@ -21,21 +21,23 @@
 EditorImpl::EditorImpl(const QString& fname, const syntax::DefinitionPtr& def):
     m_fileName(fname),
     m_definition(def),
-    m_syntax(def ? new syntax::Highlighting(document(), def, Settings::showWhite()) : nullptr)
+    m_syntax(def ? new syntax::Highlighting(document(), def, Settings::instance().showWhite) : nullptr)
 {
-    setFont(Settings::font());
-    setWordWrapMode(Settings::wordWrap() ? QTextOption::WordWrap : QTextOption::NoWrap);
+    auto& sets = Settings::instance();
+
+    setFont(sets.font());
+    setWordWrapMode(sets.wordWrap ? QTextOption::WordWrap : QTextOption::NoWrap);
 
     QTextOption opt = document()->defaultTextOption();
-    if (Settings::showWhite())
+    if (sets.showWhite)
         opt.setFlags(opt.flags() | QTextOption::ShowTabsAndSpaces);
-    if (Settings::showEndl())
+    if (sets.showEndl)
         opt.setFlags(opt.flags() | QTextOption::ShowLineAndParagraphSeparators);
     document()->setDefaultTextOption(opt);
 
     setTabStopWidth(4 * fontMetrics().width(' '));
 
-    if (Settings::showLineNumbers()){
+    if (sets.showLineNumbers){
         m_margin = new EditorMargin(this);
         m_margin->setFont(font());
     }
@@ -45,6 +47,11 @@ EditorImpl::EditorImpl(const QString& fname, const syntax::DefinitionPtr& def):
     });
 
     setVerticalScrollBar(new Scroll);
+
+    connect(&sets.showLineNumbers.signal, &qnoto::PropSignal::changed, this, [this](){
+        if (m_margin)
+            m_margin->setVisible(Settings::instance().showLineNumbers);
+    });
 }
 
 EditorImpl::~EditorImpl()
@@ -54,7 +61,7 @@ EditorImpl::~EditorImpl()
 void EditorImpl::init()
 {
     syntax::ThemePtr theme = syntax::ThemePtr::create();
-    if (!theme->load(Settings::theme()))
+    if (!theme->load(Settings::instance().theme))
         return;
 
     if (m_syntax)
@@ -172,6 +179,7 @@ void EditorImpl::startFind(const QString& text)
 {
     m_finder.pattern = text;
     m_finder.isSet = true;
+    emit findAvail(true);
 
     if (text.isEmpty()){
         dynamic_cast<Scroll*>(verticalScrollBar())->setPosses({}, blockCount());
@@ -227,6 +235,7 @@ void EditorImpl::doFind()
 
 void EditorImpl::unmark()
 {
+    emit findAvail(false);
     m_finder.isSet = false;
     auto* doc = document();
     for (QTextBlock block = doc->begin(); block != doc->end(); block = block.next()){
@@ -236,6 +245,11 @@ void EditorImpl::unmark()
     qobject_cast<QPlainTextDocumentLayout*>(document()->documentLayout())->requestUpdate();
 }
 
+Finder& EditorImpl::finder()
+{
+    return m_finder;
+}
+
 //--------------------------------------------------------------------------------------------------
 
 int Finder::find(const QString& text, QString& found, int offset)
@@ -243,3 +257,4 @@ int Finder::find(const QString& text, QString& found, int offset)
     found = pattern;
     return text.indexOf(pattern, offset, Qt::CaseInsensitive);
 }
+

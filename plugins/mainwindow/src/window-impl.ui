@@ -59,8 +59,14 @@
     </property>
     <addaction name="separator"/>
    </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuWindow"/>
    <addaction name="menuSettings"/>
   </widget>
   <widget class="QStatusBar" name="statusBar">

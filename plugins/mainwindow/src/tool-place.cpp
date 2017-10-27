@@ -82,6 +82,8 @@ ToolPlace::ToolPlace(const QString& selected, QWidget *parent):
     connect(m_header, &Header::addSplit,   this, &ToolPlace::addSplit);
     connect(m_header, &Header::closeSplit, this, &ToolPlace::closeSplit);
     connect(m_header, &Header::showPlugin, this, &ToolPlace::showPlugin);
+
+    m_selected = selected;
 }
 
 void ToolPlace::collectPlugins()
@@ -106,6 +108,11 @@ void ToolPlace::showPlugin(const QString & name)
             break;
         }
     }
+}
+
+void ToolPlace::restoreState()
+{
+    showPlugin(m_selected);
 }
 
 QString ToolPlace::selectedPlugin() const

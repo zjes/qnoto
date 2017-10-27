@@ -17,8 +17,6 @@ public:
     virtual void openFile(const QString& fileName) = 0;
     virtual void closeFile(const QString& fileName) = 0;
     virtual const MenuList& actions() const = 0;
-public:
-    virtual void showFind() = 0;
 signals:
     void updateEditMenu(const MenuList& actions);
 };

@@ -14,6 +14,7 @@ qnoto_add_lib(${PROJECT_NAME}
         includes/file-handler.h
         includes/color-select.h
         includes/ui-utils.h
+        includes/settings.h
 
         includes/plugins/mainwindow.h
         includes/plugins/editor.h
@@ -25,6 +26,7 @@ qnoto_add_lib(${PROJECT_NAME}
         src/plugins-list.cpp
         src/file-handler.cpp
         src/color-select.cpp
+        src/settings.cpp
     LIBS
         Qt5::Core
         Qt5::Widgets

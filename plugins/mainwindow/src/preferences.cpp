@@ -14,6 +14,8 @@ Preferences::Preferences():
             m_ui->plugins->insertItem(index, pl->title());
         }
     }
+
+    //connect(m_ui->buttonBox, &QDialogButtonBox::accepted, this, &Preferences::acceptPrefs);
 }
 
 Preferences::~Preferences()

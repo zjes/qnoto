@@ -17,7 +17,6 @@ public:
     QString pattern;
     bool isSet = false;
     int find(const QString& text, QString& width, int offset = 0);
-public:
 };
 
 
@@ -34,12 +33,15 @@ public:
     void load(const QString& text);
     QString text() const;
     const QString& fileName() const;
+    Finder& finder();
 public slots:
     void startFind(const QString& text);
     void unmark();
     void doFind();
 signals:
+    void showFind();
     void escape();
+    void findAvail(bool avail);
 protected:
     void resizeEvent(QResizeEvent*e ) override;
     void paintEvent(QPaintEvent *e) override;

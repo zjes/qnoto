@@ -32,17 +32,21 @@ WindowImpl::WindowImpl():
     connect(m_editors, &qnoto::Editors::updateEditMenu, this, &WindowImpl::updateEditMenu);
 
     setCentralWidget(m_editors);
-    m_split->restoreState(sets);
-    m_editors->restoreState();
 
     const auto& acts = m_editors->actions();
     for(const auto& it: acts){
         if (it->property("name").toString().startsWith("File_")){
             m_ui->menuFile->addAction(it);
         }
+        if (it->property("name").toString().startsWith("Window_")){
+            m_ui->menuWindow->addAction(it);
+        }
     }
 
     connect(m_ui->actionPreferences, &QAction::triggered, this, &WindowImpl::showPreferences);
+
+    m_split->restoreState(sets);
+    m_editors->restoreState();
 }
 
 WindowImpl::~WindowImpl()

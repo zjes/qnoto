@@ -5,7 +5,6 @@
 #include "editors.h"
 #include "editors-factory.h"
 #include "editors-find.h"
-#include "history-navigate.h"
 #include "settings.h"
 
 #include "includes/file-handler.h"
@@ -20,10 +19,6 @@ Editors::Editors():
     m_actions(this)
 {
     qnoto::setLayout<QVBoxLayout>(this, m_widget, m_find);
-
-    addAction(qnoto::Action<Editors>(this, "history-next").
-        shortcut(Qt::ControlModifier + Qt::Key_Tab).
-        action(&Editors::historyNavigate));
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -43,6 +38,7 @@ void Editors::openFile(const QString& file)
     } else {
         auto* ed = EditorsFactory::create(file);
         connect(ed, &qnoto::EditorInstance::escape, this, &Editors::escape);
+        connect(ed, &qnoto::EditorInstance::showFind, this, &Editors::showFind);
         if(ed) {
             int index = m_widget->addWidget(ed);
             m_editors.insert(file, {ed, index});
@@ -58,6 +54,9 @@ void Editors::openFile(const QString& file)
         act->setText(act->property("orig-text").toString().arg(QFileInfo(file).fileName()));
     }
 
+    Settings::addToRecent(file);
+
+    m_actions.refreshRecent();
     emit updateEditMenu(m_editors[file].editor->actions());
     emit openedChanged();
 }
@@ -85,6 +84,9 @@ void Editors::closeFile(const QString& fileName)
         m_editors[iwid->fileName()].index = i;
     }
 
+    auto list = Settings::openedFiles();
+    list.removeAll(fileName);
+    Settings::setOpenedFiles(list);
     emit openedChanged();
 }
 
@@ -101,27 +103,6 @@ void Editors::escape()
 {
     if (m_find->isVisible())
         m_find->hide();
-}
-
-//--------------------------------------------------------------------------------------------------
-
-void Editors::historyNavigate()
-{
-    if (m_historyNavi) {
-        m_historyNavi->next();
-    } else {
-        m_historyNavi = new HistoryNavigate(m_widget);
-        connect(m_historyNavi, &HistoryNavigate::closed, this, &Editors::delNavigator);
-    }
-}
-
-//--------------------------------------------------------------------------------------------------
-
-void Editors::delNavigator(const QString& fileName)
-{
-    qnoto::FileHandler::instance().activate(fileName);
-    m_historyNavi->deleteLater();
-    m_historyNavi = nullptr;
 }
 
 //--------------------------------------------------------------------------------------------------

@@ -29,6 +29,7 @@ class ToolPlace : public QWidget
 public:
     explicit ToolPlace(const QString& selected, QWidget *parent = 0);
     QString selectedPlugin() const;
+    void restoreState();
 signals:
     void addSplit(const QString& name);
     void closeSplit();
@@ -40,4 +41,5 @@ private:
     QMap<QString, int> m_stackIndex;
     QList<qnoto::ToolPlugin*> m_plugins;
     Header* m_header;
+    QString m_selected;
 };
