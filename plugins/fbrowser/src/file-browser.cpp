@@ -1,11 +1,19 @@
 #include <QDebug>
 #include <QVBoxLayout>
+#include <QResource>
+#include <QtQml>
+#include <QQuickItem>
 #include "file-browser.h"
-#include "list-widget.h"
+#include "file-handler.h"
 
 FileBrowser::FileBrowser()
-{}
+{
+    QResource::registerResource("plugins/fbrowser-res.rcc");
+}
 
+FileBrowser::~FileBrowser()
+{
+}
 
 QString FileBrowser::name() const
 {
@@ -17,8 +25,10 @@ QString FileBrowser::title() const
     return tr("File browser");
 }
 
-QWidget* FileBrowser::create(QWidget* parent) const
+QObject* FileBrowser::create(QObject* parent)
 {
-    return new ListWidget(parent);
-}
+    qnoto::Component *component = createComponent(parent, "qrc:/qml/FileBrowser.qml");
+    component->setContext("fileBrowser", new FileHandler);
 
+    return component;
+}

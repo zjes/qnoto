@@ -38,8 +38,9 @@ private:
     T m_default;
 };
 
-class COMMON_EXPORT Settings
+class COMMON_EXPORT Settings: public QObject
 {
+    Q_OBJECT
 public:
     virtual ~Settings();
     bool save();
@@ -53,20 +54,20 @@ public:
 
     template<typename T>
     std::enable_if_t<!std::is_same<T, std::decay_t<QString>>::value, T>
-    value(const QString& key, const T& def = {})
+    value(const QString& key, const T& def = {}) const
     {
         return _value(key, def).template value<T>();
     }
 
     void setValue(const QString& key, const QString& value);
-    QString value(const QString& key, const QString& def = {});
+    QString value(const QString& key, const QString& def = {}) const;
 
 protected:
     Settings(const QString& name);
 
 private:
     void _setValue(const QString& key, const QVariant& value);
-    QVariant _value(const QString& key, const QVariant& def);
+    QVariant _value(const QString& key, const QVariant& def) const;
 
 private:
     QScopedPointer<QSettings> m_settings;

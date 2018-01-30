@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/Main.qml</file>
+        <file>qml/Controls/qmldir</file>
+        <file>qml/Controls/SplitView.qml</file>
+        <file>qml/Editors.qml</file>
+        <file>qml/LeftPlace.qml</file>
+        <file>qml/LeftHeader.qml</file>
+        <file>qml/PluginLoader.qml</file>
+        <file>qml/ToolPlugin.qml</file>
+        <file>qml/Controls/ListView.qml</file>
+        <file>qml/Controls/MenuItem.qml</file>
+        <file>qml/Controls/Action.qml</file>
+        <file>qml/WindowSwitcher.qml</file>
+    </qresource>
+</RCC>

@@ -5,6 +5,41 @@
 
 namespace qnoto {
 
+//--------------------------------------------------------------------------------------------------
+
+class COMMON_EXPORT PluginDef: public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString name    MEMBER name    NOTIFY dummy)
+    Q_PROPERTY(QString caption MEMBER caption NOTIFY dummy)
+    Q_PROPERTY(Type    type    MEMBER type    NOTIFY dummy)
+public:
+    enum class Type
+    {
+        Qml,
+        Bin
+    };
+    Q_ENUM(Type)
+
+public:
+    PluginDef() = default;
+    PluginDef(const QString& _name, const QString& _caption, Type _type, const QString& _fileName, const QString& _mainQml);
+
+signals:
+    void dummy();
+
+public:
+    QString name;
+    QString caption;
+    Type    type;
+    QString fileName;
+    QString mainQml;
+};
+
+using PluginDefPtr = QSharedPointer<PluginDef>;
+
+//--------------------------------------------------------------------------------------------------
+
 class COMMON_EXPORT PluginManager
 {
 public:
@@ -31,6 +66,8 @@ public:
 
     QList<Plugin*> plugins(const QString& interfaceName) const;
     Plugin* plugin(const QString& name);
+    PluginDef* pluginDefinition(const QString& name) const;
+    QList<PluginDef*> pluginDefinitions(const QString& filter) const;
 
 private:
     PluginManager();
@@ -38,6 +75,8 @@ private:
     class PluginManagerImpl;
     QScopedPointer<PluginManagerImpl> m_impl;
 };
+
+//--------------------------------------------------------------------------------------------------
 
 template<typename Plug>
 inline Plug* plugin()
@@ -56,4 +95,25 @@ inline QList<Plugin*> plugins(const QString& prefix)
     return PluginManager::instance().plugins(prefix);
 }
 
+inline Plugin* plugin(const QString& name)
+{
+    return PluginManager::instance().plugin(name);
 }
+
+inline PluginDef* pluginDefinition(const QString& name)
+{
+    return PluginManager::instance().pluginDefinition(name);
+}
+
+inline QList<PluginDef*> pluginDefinitions(const QString& filter)
+{
+    return PluginManager::instance().pluginDefinitions(filter);
+}
+
+
+//--------------------------------------------------------------------------------------------------
+
+
+}
+
+Q_DECLARE_METATYPE(qnoto::PluginDef::Type)

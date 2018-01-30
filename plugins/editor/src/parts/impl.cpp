@@ -6,7 +6,6 @@
 #include <QScrollBar>
 #include <QStyle>
 #include <QToolTip>
-#include <cmath>
 
 #include "impl.h"
 #include "margin.h"

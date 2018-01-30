@@ -1,11 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 cmake_policy(VERSION 3.5)
 
-include("cmake/qnoto.cmake")
-
-qnoto_init(common QT Core Widgets)
-
-qnoto_add_lib(${PROJECT_NAME}
+qnoto_add_lib(common
     PUBLIC
         includes/commandline.h
         includes/convert.h
@@ -15,11 +11,6 @@ qnoto_add_lib(${PROJECT_NAME}
         includes/color-select.h
         includes/ui-utils.h
         includes/settings.h
-
-        includes/plugins/mainwindow.h
-        includes/plugins/editor.h
-        includes/plugins/tool-plugin.h
-        includes/plugins/editors.h
     SOURCES
         src/plugin.cpp
         src/pluginmanager.cpp
@@ -27,7 +18,12 @@ qnoto_add_lib(${PROJECT_NAME}
         src/file-handler.cpp
         src/color-select.cpp
         src/settings.cpp
+
+    OUTPUT ${CMAKE_SOURCE_DIR}/bin
+
     LIBS
         Qt5::Core
         Qt5::Widgets
+        Qt5::Qml
+        Qt5::Quick
 )

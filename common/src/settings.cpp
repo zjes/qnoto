@@ -95,7 +95,7 @@ void Settings::setValue(const QString& key, const QString& value)
     _setValue(key, value);
 }
 
-QString Settings::value(const QString& key, const QString& def)
+QString Settings::value(const QString& key, const QString& def) const
 {
     return m_settings->value(key, def).toString();
 }
@@ -105,13 +105,16 @@ void Settings::_setValue(const QString& key, const QVariant& value)
     m_settings->setValue(key, value);
 }
 
-QVariant Settings::_value(const QString& key, const QVariant& def)
+QVariant Settings::_value(const QString& key, const QVariant& def) const
 {
     return m_settings->value(key, def);
 }
 
 bool Settings::save()
-{ return false; }
+{
+    m_settings->sync();
+    return false;
+}
 
 PropSignal::PropSignal()
 {}

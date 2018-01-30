@@ -1,35 +1,36 @@
 #pragma once
-#include <QWidget>
-#include <QSharedPointer>
+#include <QQmlComponent>
 #include "common-export.h"
 
 class QSettings;
 
 namespace qnoto {
 
-#define FORWARD(X)\
-    class X; \
-    using X ## Ptr = QSharedPointer<X>;
-
-FORWARD(Plugin)
-
-class PreferencesPage: public QWidget
+class COMMON_EXPORT Component: public QQmlComponent
 {
+    Q_OBJECT
 public:
-    virtual bool save() = 0;
+    Component(QQmlEngine* engine, const QString& file, QObject* parent);
+    ~Component() override;
+    void setContext(const QString& name, QObject* context);
+private:
+    QObject* m_context = nullptr;
 };
 
-class COMMON_EXPORT Plugin: public QWidget
+class COMMON_EXPORT Plugin: public QObject
 {
     Q_OBJECT
 public:
     Plugin();
     virtual ~Plugin();
-    virtual bool saveState() const;
-    virtual void restoreState();
-    virtual PreferencesPage* preferences() const;
     virtual QString name() const = 0;
     virtual QString title() const = 0;
+    virtual QObject* create(QObject* parent) = 0;
+
+public:
+    static Component* createComponent(QObject* parent, const QString& fileName);
 };
 
 }
+
+Q_DECLARE_INTERFACE(qnoto::Plugin, "qNoto.Plugin")

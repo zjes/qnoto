@@ -4,6 +4,10 @@
 #include <QDebug>
 #include <QPluginLoader>
 #include <QMutex>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QQmlEngine>
+#include <QResource>
 #include "includes/pluginmanager.h"
 #include "includes/plugin.h"
 
@@ -19,26 +23,61 @@ public:
     bool preloadPlugins()
     {
         QMutexLocker lock(&m_mutex);
-        QDir pluginsDir(QCoreApplication::applicationDirPath());
-        pluginsDir.cd("plugins");
 
-        for(const QFileInfo& inf: pluginsDir.entryInfoList({"*.so", "*.dll"})) {
-            auto loader = QSharedPointer<QPluginLoader>::create(inf.absoluteFilePath());
-            if (!loader->load()){
-                qWarning() << loader->errorString();
-                continue;
-            }
-            qDebug() << "Preload:" << loader->metaData()["IID"].toString();
-            m_plugins.insert(
-                loader->metaData()["IID"].toString(),
-                loader
-            );
+        QFile file("plugins.json");
+        if (!file.exists()){
+            qWarning() << "plugins.json doesn't exists";
+            return false;
         }
 
-        return false;
+        if (!file.open(QIODevice::ReadOnly)){
+            qWarning() << "plugins.json cannot be read" << file.errorString();
+            return false;
+        }
+
+        QJsonParseError err;
+        QJsonDocument doc = QJsonDocument::fromJson(file.readAll(), &err);
+        if (err.error){
+            qWarning() << "plugins.json canont be parsed" << err.errorString();
+            return false;
+        }
+
+        file.close();
+
+        for(const QJsonValue& val: doc.array()){
+            QJsonObject obj = val.toObject();
+            auto def = PluginDefPtr::create(
+                obj.value("typeName").toString(),
+                obj.value("name").toString(),
+                obj.value("type").toString() == "bin" ? PluginDef::Type::Bin : PluginDef::Type::Qml,
+                obj.value("fileName").toString(),
+                obj.value("mainQml").toString()
+            );
+            m_definitions.insert(obj.value("typeName").toString(), def);
+        }
+
+        for(const auto& def: m_definitions){
+            if (def->type == PluginDef::Type::Bin){
+                auto loader = QSharedPointer<QPluginLoader>::create(def->fileName);
+                if (!loader->load()){
+                    qWarning() << loader->errorString();
+                    continue;
+                }
+                qDebug() << "Preload:" << loader->metaData()["IID"].toString();
+                m_plugins.insert(
+                    loader->metaData()["IID"].toString(),
+                    loader
+                );
+            } else {
+                QResource::registerResource(def->fileName);
+            }
+        }
+
+        return true;
     }
 
 public:
+    QMultiHash<QString, PluginDefPtr> m_definitions;
     QMultiHash<QString, QSharedPointer<QPluginLoader>> m_plugins;
     QMutex m_mutex;
 };
@@ -64,8 +103,6 @@ bool PluginManager::preloadPlugins()
 
 Plugin* PluginManager::plugin(const QString& name)
 {
-    //QMutexLocker lock(&m_impl->m_mutex);
-
     for(const QString& key: m_impl->m_plugins.keys()){
         if (!key.startsWith(name))
             continue;
@@ -106,6 +143,43 @@ QList<Plugin*> PluginManager::plugins(const QString& interfaceName) const
         }
     }
     return ret;
+}
+
+PluginDef* PluginManager::pluginDefinition(const QString& name) const
+{
+    if (m_impl->m_definitions.contains(name)){
+        return m_impl->m_definitions.value(name).data();
+    }
+    return nullptr;
+}
+
+QList<PluginDef*> PluginManager::pluginDefinitions(const QString& filter) const
+{
+    QList<PluginDef*> ret;
+    for(const QString& key: m_impl->m_definitions.keys()){
+        if (!filter.isEmpty()){
+            if (!key.startsWith(filter))
+                continue;
+
+            if (filter.length() < key.length() && !key.startsWith(filter+"."))
+                continue;
+        }
+
+        ret.append(m_impl->m_definitions.value(key).data());
+    }
+    return ret;
+}
+
+
+
+PluginDef::PluginDef(const QString& _name, const QString& _caption, Type _type, const QString& _fileName, const QString& _mainQml):
+    name(_name),
+    caption(_caption),
+    type(_type),
+    fileName(_fileName),
+    mainQml(_mainQml)
+{
+    QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 }
 
 }

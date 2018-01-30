@@ -1,28 +1,16 @@
 cmake_minimum_required(VERSION 3.5)
 cmake_policy(VERSION 3.5)
 
-include(GenerateExportHeader)
-
-qnoto_init(editor QT Core Widgets Concurrent Xml Test)
-include_directories(src)
-
-qnoto_add_plugin(${PROJECT_NAME}
+qnoto_add_plugin(editor
     SOURCES
         src/editor.h
         src/editor.cpp
-        src/preferences.h
-        src/preferences.cpp
-        src/preferences.ui
+        src/editor-instance.h
+        src/editor-instance.cpp
+        src/default-editor.h
+        src/default-editor.cpp
         src/settings.h
         src/settings.cpp
-        src/parts/impl.h
-        src/parts/impl.cpp
-        src/parts/margin.h
-        src/parts/margin.cpp
-        src/parts/header.h
-        src/parts/header.cpp
-        src/parts/scroll.h
-        src/parts/scroll.cpp
 
         src/syntax/common.h
         src/syntax/manager.h
@@ -84,44 +72,18 @@ qnoto_add_plugin(${PROJECT_NAME}
         src/syntax/rules/worddetect.cpp
         src/syntax/rules/includerules.h
         src/syntax/rules/includerules.cpp
+
+    OUTPUT ${CMAKE_SOURCE_DIR}/bin/plugins
+
     LIBS
         Qt5::Core
-        Qt5::Widgets
         Qt5::Xml
         Qt5::Concurrent
+        Qt5::Quick
         common
 )
 
-qnoto_add_executable(${PROJECT_NAME}-test
-    SOURCES
-        test/main.cpp
-
-        src/syntax/rules/rule.h
-        src/syntax/rules/rule.cpp
-        src/syntax/rules/anychar.h
-        src/syntax/rules/anychar.cpp
-        src/syntax/rules/detect2char.h
-        src/syntax/rules/detect2char.cpp
-        src/syntax/rules/detectchar.h
-        src/syntax/rules/detectchar.cpp
-        src/syntax/rules/detectidentifier.h
-        src/syntax/rules/detectidentifier.cpp
-        src/syntax/rules/detectspaces.cpp
-        src/syntax/rules/detectspaces.h
-        src/syntax/rules/float.cpp
-        src/syntax/rules/float.h
-        src/syntax/rules/hlcchar.cpp
-        src/syntax/rules/hlcchar.h
-        src/syntax/rules/hlchex.h
-        src/syntax/rules/hlchex.cpp
-        src/syntax/rules/regexpr.h
-        src/syntax/rules/regexpr.cpp
-
-        src/settings.h
-        src/settings.cpp
-
-    LIBS
-        Qt5::Core
-        Qt5::Test
-        ${PROJECT_NAME}
+qnoto_add_resource(
+    TARGET  editor
+    SOURCES resources/qml.qrc
 )
