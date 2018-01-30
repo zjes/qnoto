@@ -1,7 +1,7 @@
 #pragma once
 #include "includes/plugins/mainwindow.h"
 
-FORWARD(WindowImpl);
+FORWARD(WindowImpl)
 
 class MainWindow: public qnoto::MainWindow
 {

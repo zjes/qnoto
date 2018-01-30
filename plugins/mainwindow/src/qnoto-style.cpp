@@ -242,6 +242,7 @@ void QNotoStyle::drawControl(ControlElement element, const QStyleOption *option,
         } else {
             QProxyStyle::drawControl(element, option, painter, widget);
         }
+        break;
     default:
         if (!isPanel(widget))
             QProxyStyle::drawControl(element, option, painter, widget);

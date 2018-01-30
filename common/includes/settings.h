@@ -55,7 +55,7 @@ public:
     std::enable_if_t<!std::is_same<T, std::decay_t<QString>>::value, T>
     value(const QString& key, const T& def = {})
     {
-        return _value(key, def).value<T>();
+        return _value(key, def).template value<T>();
     }
 
     void setValue(const QString& key, const QString& value);

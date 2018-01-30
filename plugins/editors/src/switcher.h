@@ -1,6 +1,8 @@
 #pragma once
 #include <QListWidget>
 
+class QShortcut;
+
 class Switcher : public QListWidget
 {
     Q_OBJECT
