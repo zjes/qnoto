@@ -13,7 +13,6 @@ add_subdirectory(common)
 add_subdirectory(plugins/editor)
 add_subdirectory(plugins/fbrowser)
 add_subdirectory(plugins/opened-files)
-add_subdirectory(plugins/ed2)
 
 
 add_definitions(-DQT_QUICK_DEFAULT_TEXT_RENDER_TYPE=NativeRendering)

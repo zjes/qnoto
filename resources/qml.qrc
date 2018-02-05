@@ -9,8 +9,8 @@
         <file>qml/PluginLoader.qml</file>
         <file>qml/ToolPlugin.qml</file>
         <file>qml/Controls/ListView.qml</file>
-        <file>qml/Controls/MenuItem.qml</file>
         <file>qml/Controls/Action.qml</file>
         <file>qml/WindowSwitcher.qml</file>
+        <file>qml/Controls/ToolBtn.qml</file>
     </qresource>
 </RCC>

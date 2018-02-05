@@ -1,5 +1,5 @@
-import QtQuick 2.10
-import QtQuick.Controls 2.3
+import QtQuick 2.9
+import QtQuick.Controls 2.2
 import Controls 1.0
 import Utils 1.0
 
@@ -45,7 +45,9 @@ Popup {
             }
         }
         Keys.onPressed: {
+            console.log("keypress", forward.key)
             if (event.key === forward.key && event.modifiers === forward.modifiers){
+                console.log("next")
                 next();
             } else {
                 if (backward.key === Qt.Key_Tab){

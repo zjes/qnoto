@@ -4,9 +4,6 @@
 
 namespace qnoto {
 
-Plugin::Plugin()
-{}
-
 Plugin::~Plugin()
 {}
 
@@ -15,7 +12,6 @@ Component* Plugin::createComponent(QObject* parent, const QString& fileName)
     auto* engine = qmlContext(parent)->engine();
     qnoto::Component *component = new qnoto::Component(engine, fileName, parent);
     QQmlContext* context = new QQmlContext(engine);
-    //component->setParent(parent);
     engine->setContextForObject(component, context);
     return component;
 }

@@ -8,15 +8,12 @@ qnoto_add_lib(common
         includes/plugin.h
         includes/pluginmanager.h
         includes/file-handler.h
-        includes/color-select.h
-        includes/ui-utils.h
         includes/settings.h
     SOURCES
         src/plugin.cpp
         src/pluginmanager.cpp
         src/plugins-list.cpp
         src/file-handler.cpp
-        src/color-select.cpp
         src/settings.cpp
 
     OUTPUT ${CMAKE_SOURCE_DIR}/bin

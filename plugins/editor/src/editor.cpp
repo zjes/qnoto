@@ -8,7 +8,6 @@
 #include <QResource>
 #include "editor.h"
 #include "syntax/manager.h"
-#include "includes/ui-utils.h"
 #include "editor-instance.h"
 #include "default-editor.h"
 
@@ -16,7 +15,7 @@
 
 Editor::Editor()
 {
-    QResource::registerResource("plugins/editor-res.rcc");
+    QResource::registerResource("plugins/editor.rcc");
 
     qmlRegisterType<DefaultEditor>("DefaultEditor", 1, 0, "DefaultEditor");
     qmlRegisterType<syntax::Theme>("Theme", 1, 0, "Theme");

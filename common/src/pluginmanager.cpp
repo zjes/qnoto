@@ -13,13 +13,9 @@
 
 namespace qnoto {
 
-class PluginManager::PluginManagerImpl: public QObject
+class PluginManagerImpl
 {
-    Q_OBJECT
 public:
-    ~PluginManagerImpl() override
-    {}
-
     bool preloadPlugins()
     {
         QMutexLocker lock(&m_mutex);
@@ -46,13 +42,14 @@ public:
 
         for(const QJsonValue& val: doc.array()){
             QJsonObject obj = val.toObject();
-            auto def = PluginDefPtr::create(
-                obj.value("typeName").toString(),
-                obj.value("name").toString(),
-                obj.value("type").toString() == "bin" ? PluginDef::Type::Bin : PluginDef::Type::Qml,
-                obj.value("fileName").toString(),
-                obj.value("mainQml").toString()
-            );
+
+            auto def = PluginDefPtr::create();
+            def->name     = obj.value("typeName").toString();
+            def->fileName = obj.value("fileName").toString();
+            def->mainQml  = obj.value("mainQml").toString();
+            def->caption  = obj.value("name").toString();
+            def->type     = obj.value("type").toString() == "bin" ? PluginDef::Type::Bin : PluginDef::Type::Qml;
+
             m_definitions.insert(obj.value("typeName").toString(), def);
         }
 
@@ -82,6 +79,8 @@ public:
     QMutex m_mutex;
 };
 
+//--------------------------------------------------------------------------------------------------
+
 PluginManager& PluginManager::instance()
 {
     static PluginManager inst;
@@ -101,7 +100,7 @@ bool PluginManager::preloadPlugins()
     return m_impl->preloadPlugins();
 }
 
-Plugin* PluginManager::plugin(const QString& name)
+Plugin* PluginManager::plugin(const QString& name) const
 {
     for(const QString& key: m_impl->m_plugins.keys()){
         if (!key.startsWith(name))
@@ -170,18 +169,13 @@ QList<PluginDef*> PluginManager::pluginDefinitions(const QString& filter) const
     return ret;
 }
 
+//--------------------------------------------------------------------------------------------------
 
-
-PluginDef::PluginDef(const QString& _name, const QString& _caption, Type _type, const QString& _fileName, const QString& _mainQml):
-    name(_name),
-    caption(_caption),
-    type(_type),
-    fileName(_fileName),
-    mainQml(_mainQml)
+PluginDef::PluginDef()
 {
     QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 }
 
-}
+//--------------------------------------------------------------------------------------------------
 
-#include "pluginmanager.moc"
+}

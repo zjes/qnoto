@@ -1,5 +1,5 @@
-import QtQuick 2.10
-import QtQuick.Controls 2.3
+import QtQuick 2.9
+import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import Utils 1.0
 import Controls 1.0
@@ -9,11 +9,13 @@ Column {
 
     Frame {
         id: _header
-        height: 30
+        height: 25
         width: parent.width
         Label {
+            id: header
             anchors.fill: parent
-            text: "ed2"//manager.current().fileName
+            verticalAlignment: Label.AlignVCenter
+            horizontalAlignment: Label.AlignLeft
         }
     }
 
@@ -22,6 +24,14 @@ Column {
         property var items: []
         width: parent.width
         height: parent.height - _header.height
+        onCurrentIndexChanged: {
+            var cur = editors.itemAt(editors.currentIndex);
+            if (cur){
+                header.text = cur.fileName
+            } else {
+                header.text = "";
+            }
+        }
     }
 
     Connections {
@@ -103,7 +113,7 @@ Column {
         return editors.itemAt(editors.currentIndex);
     }
 
-    Action {
+    /*Action {
         id: fileNew
         text: qsTr("File new") + " ("+shortcutText+")"
         shortcut: StandardKey.New
@@ -175,30 +185,30 @@ Column {
         id: closeFileAll
         icon.name: "file-close"
         text: qsTr("Close all")
-    }
+    }*/
 
     Action {
         id: switchWindowForward
-        shortcut: StandardKey.NextChild
-        text: qsTr("Previous document in history") + "("+shortcutText+")"
+        sequence: StandardKey.NextChild
+        //text: qsTr("Previous document in history") + "("+shortcutText+")"
         enabled: fileHandler.files.length > 0
         Component.onCompleted: {
-            windowMenu.addAction(switchWindowForward)
+            //windowMenu.addAction(switchWindowForward)
         }
-        onTriggered: {
+        onActivated: {
             wndSwitch.next();
         }
     }
 
     Action {
         id: switchWindowBackward
-        shortcut: "Ctrl+Shift+Tab"
-        text: qsTr("Next document in history") + "("+shortcutText+")"
+        sequence: "Ctrl+Shift+Tab"
+        //text: qsTr("Next document in history") + "("+shortcutText+")"
         enabled: fileHandler.files.length > 0
         Component.onCompleted: {
-            windowMenu.addAction(switchWindowBackward)
+            //windowMenu.addAction(switchWindowBackward)
         }
-        onTriggered: {
+        onActivated: {
             wndSwitch.prev();
         }
     }
@@ -215,7 +225,7 @@ Column {
 
     function createMenu()
     {
-        while(fileMenu.count){
+        /*while(fileMenu.count){
             fileMenu.takeItem(0);
         }
 
@@ -232,19 +242,19 @@ Column {
             fileMenu.addAction(closeFileAllExcept);
         }
         addSeparator(fileMenu);
-        fileMenu.addAction(quit);
+        fileMenu.addAction(quit);*/
     }
 
     function updateMenu()
     {
-        createMenu();
-        if(editors.count){
-            var fileName = FileInfo.filename(current.fileName);
-            saveFile.text = qsTr("Save '%1'").arg(fileName)
-            saveFileAs.text = qsTr("Save '%1' as...").arg(fileName)
-            closeFile.text = qsTr("Close '%1'").arg(fileName)
-            closeFileAllExcept.text = qsTr("Close all except '%1'").arg(fileName)
-        }
+//        createMenu();
+//        if(editors.count){
+//            var fileName = FileInfo.filename(current.fileName);
+//            saveFile.text = qsTr("Save '%1'").arg(fileName)
+//            saveFileAs.text = qsTr("Save '%1' as...").arg(fileName)
+//            closeFile.text = qsTr("Close '%1'").arg(fileName)
+//            closeFileAllExcept.text = qsTr("Close all except '%1'").arg(fileName)
+//        }
     }
 
     function addSeparator(menu)

@@ -1,5 +1,5 @@
-import QtQuick 2.10
-import QtQuick.Controls 2.3
+import QtQuick 2.9
+import QtQuick.Controls 2.2
 
 Column {
     property alias plugin: header.selectedPlugin
@@ -7,7 +7,7 @@ Column {
     LeftHeader {
         id     : header
         width  : parent.width
-        height : 30
+        height : 25
     }
 
     PluginLoader {

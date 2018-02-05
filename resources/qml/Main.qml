@@ -1,5 +1,5 @@
-import QtQuick 2.10
-import QtQuick.Controls 2.3
+import QtQuick 2.9
+import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import Controls 1.0
 
@@ -9,7 +9,7 @@ ApplicationWindow {
     width : 1000
     height: 800
 
-    menuBar: MenuBar {
+    /*menuBar: MenuBar {
         id: mainMenu
         Menu {
             id: fileMenu
@@ -27,7 +27,7 @@ ApplicationWindow {
             id: settingsMenu
             title: qsTr("&Settings")
         }
-    }
+    }*/
 
     SplitView {
         anchors.fill: parent

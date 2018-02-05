@@ -8,7 +8,7 @@
 
 FileBrowser::FileBrowser()
 {
-    QResource::registerResource("plugins/fbrowser-res.rcc");
+    QResource::registerResource("plugins/fbrowser.rcc");
 }
 
 FileBrowser::~FileBrowser()

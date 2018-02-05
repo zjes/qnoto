@@ -1,5 +1,5 @@
-import QtQuick 2.10
-import QtQuick.Controls 2.3
+import QtQuick 2.9
+import QtQuick.Controls 2.2
 import Controls 1.0
 import Utils 1.0
 
@@ -49,10 +49,10 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
                 }
 
-                ToolButton {
+                ToolBtn {
                     id: close
                     anchors.right: parent.right
-                    icon.source: "qrc:/icons/std/window-close.png"
+                    icon: "qrc:/icons/std/window-close.png"
                     width: parent.height
                     height: parent.height
                     visible: false
